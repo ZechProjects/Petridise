@@ -1,7 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+function getApiKey(req: VercelRequest): string | undefined {
+  // Check for user-provided key in header first, then fall back to env
+  const userKey = req.headers['x-gemini-api-key'] as string | undefined;
+  return userKey || process.env.GEMINI_API_KEY;
+}
 
 interface EvolveRequest {
   generation: number;
@@ -17,8 +22,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
+  const apiKey = getApiKey(req);
+  if (!apiKey) {
+    return res.status(400).json({ error: 'GEMINI_API_KEY not configured. Please provide your own API key.' });
   }
 
   try {
@@ -26,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const prompt = generateEvolvePrompt(generation, world, organisms, events, statistics, realOrganismsOnly);
 
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

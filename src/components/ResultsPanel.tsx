@@ -11,6 +11,7 @@ interface ResultsPanelProps {
   onContinue: () => void;
   onReset: () => void;
   isEvolving: boolean;
+  onExport: () => void;
 }
 
 export const ResultsPanel: React.FC<ResultsPanelProps> = ({
@@ -22,7 +23,8 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
   evolveResult,
   onContinue,
   onReset,
-  isEvolving
+  isEvolving,
+  onExport
 }) => {
   return (
     <div className="space-y-6">
@@ -142,6 +144,13 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
           ) : (
             '🧬 Evolve & Continue'
           )}
+        </button>
+        <button
+          onClick={onExport}
+          className="px-6 py-4 rounded-xl font-bold text-lg bg-blue-600 text-white hover:bg-blue-500 transition-all"
+          title="Export world to JSON file"
+        >
+          📤 Export
         </button>
         <button
           onClick={onReset}

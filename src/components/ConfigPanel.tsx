@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { WorldConfig, BiomeType, ConfigFormState } from '@/types';
 
 interface ConfigPanelProps {
   onStart: (config: ConfigFormState) => void;
   isLoading: boolean;
+  userApiKey: string;
+  onApiKeyChange: (key: string) => void;
+  onImport: (file: File) => Promise<boolean>;
 }
 
 const BIOMES: BiomeType[] = ['ocean', 'forest', 'desert', 'tundra', 'swamp', 'volcanic', 'grassland', 'cave', 'alien'];
@@ -25,11 +28,14 @@ const DEFAULT_CONFIG: Partial<WorldConfig> = {
   biome: 'forest'
 };
 
-export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onStart, isLoading }) => {
+export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onStart, isLoading, userApiKey, onApiKeyChange, onImport }) => {
   const [useRandom, setUseRandom] = useState(true);
   const [realOrganismsOnly, setRealOrganismsOnly] = useState(false);
   const [worldConfig, setWorldConfig] = useState<Partial<WorldConfig>>(DEFAULT_CONFIG);
   const [simulationDuration, setSimulationDuration] = useState(30);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +45,20 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onStart, isLoading }) 
       simulationDuration,
       realOrganismsOnly
     });
+  };
+
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsImporting(true);
+    await onImport(file);
+    setIsImporting(false);
+    
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const updateCompound = (key: keyof WorldConfig['compounds'], value: number) => {
@@ -58,6 +78,78 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onStart, isLoading }) 
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* API Key Section */}
+        <div className="p-4 bg-petri-bg rounded-lg border border-petri-highlight">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-white font-medium flex items-center gap-2">
+                🔑 Gemini API Key
+              </label>
+              <p className="text-xs text-gray-400 mt-1">
+                {userApiKey ? 'API key configured' : 'Required if not set in environment'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+              className="px-3 py-1 text-sm bg-petri-highlight rounded-lg hover:bg-petri-glow transition-colors"
+            >
+              {showApiKeyInput ? 'Hide' : userApiKey ? 'Change' : 'Set Key'}
+            </button>
+          </div>
+          {showApiKeyInput && (
+            <div className="mt-3">
+              <input
+                type="password"
+                value={userApiKey}
+                onChange={(e) => onApiKeyChange(e.target.value)}
+                placeholder="Enter your Gemini API key..."
+                className="w-full px-4 py-2 bg-petri-dark border border-petri-highlight rounded-lg text-white focus:outline-none focus:border-petri-glow"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Get your key from{' '}
+                <a
+                  href="https://aistudio.google.com/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-petri-glow hover:underline"
+                >
+                  Google AI Studio
+                </a>
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Import World */}
+        <div className="p-4 bg-petri-bg rounded-lg border border-petri-highlight">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-white font-medium flex items-center gap-2">
+                📥 Import World
+              </label>
+              <p className="text-xs text-gray-400 mt-1">Load a previously exported world</p>
+            </div>
+            <label className={`px-4 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+              isImporting ? 'bg-gray-600 cursor-not-allowed' : 'bg-petri-highlight hover:bg-petri-glow'
+            }`}>
+              {isImporting ? 'Importing...' : 'Choose File'}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileImport}
+                disabled={isImporting}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="border-t border-petri-highlight pt-4">
+          <p className="text-center text-gray-400 text-sm mb-4">— Or create a new world —</p>
+        </div>
+
         {/* Random Toggle */}
         <div className="flex items-center justify-between p-4 bg-petri-bg rounded-lg">
           <label className="text-white font-medium">Generate Random World</label>

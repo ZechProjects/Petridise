@@ -1,8 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // Use Imagen 4 (fast version for quicker generation)
 const IMAGEN_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict';
+
+function getApiKey(req: VercelRequest): string | undefined {
+  // Check for user-provided key in header first, then fall back to env
+  const userKey = req.headers['x-gemini-api-key'] as string | undefined;
+  return userKey || process.env.GEMINI_API_KEY;
+}
 
 interface TextureRequest {
   biome: string;
@@ -24,8 +29,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
+  const apiKey = getApiKey(req);
+  if (!apiKey) {
+    return res.status(400).json({ error: 'GEMINI_API_KEY not configured. Please provide your own API key.' });
   }
 
   try {
@@ -34,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const prompt = generateImagePrompt(biome, world);
 
     // Using the models.predict endpoint for Imagen
-    const response = await fetch(`${IMAGEN_API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${IMAGEN_API_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

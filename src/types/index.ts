@@ -177,3 +177,15 @@ export interface GenerateOrganismImageResponse {
   imageData: string; // Base64 data URL
   description: string;
 }
+
+// Export/Import Types
+export interface ExportedWorld {
+  version: string; // For future compatibility
+  exportedAt: string;
+  generation: number;
+  world: WorldConfig;
+  organisms: Organism[];
+  events: SimulationEvent[];
+  stats: SimulationStats;
+  narrative: string;
+}

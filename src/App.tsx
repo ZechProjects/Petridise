@@ -22,7 +22,11 @@ function App() {
     completeRun,
     reset,
     apiDebugHistory,
-    clearDebugHistory
+    clearDebugHistory,
+    userApiKey,
+    updateApiKey,
+    downloadWorld,
+    importWorld
   } = useSimulation();
 
   const [isImmersive, setIsImmersive] = useState(false);
@@ -88,6 +92,9 @@ function App() {
             <ConfigPanel
               onStart={generateWorld}
               isLoading={isGenerating}
+              userApiKey={userApiKey}
+              onApiKeyChange={updateApiKey}
+              onImport={importWorld}
             />
           </div>
         )}
@@ -135,6 +142,7 @@ function App() {
             onContinue={continueSimulation}
             onReset={reset}
             isEvolving={isEvolving}
+            onExport={downloadWorld}
           />
         )}
 

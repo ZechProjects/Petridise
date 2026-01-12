@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   SimulationStatus,
   WorldConfig,
@@ -7,9 +7,12 @@ import {
   SimulationStats,
   ConfigFormState,
   GenerateWorldResponse,
-  EvolveResponse
+  EvolveResponse,
+  ExportedWorld
 } from '@/types';
 import { TextureConfig, FallbackTextureConfig } from '@/game';
+
+const STORAGE_KEY_API_KEY = 'petridise_gemini_api_key';
 
 const DEFAULT_STATS: SimulationStats = {
   totalOrganisms: 0,
@@ -44,6 +47,34 @@ export function useSimulation() {
   const [evolveResult, setEvolveResult] = useState<EvolveResponse | null>(null);
   const [apiDebugHistory, setApiDebugHistory] = useState<ApiDebugData[]>([]);
   const [realOrganismsOnly, setRealOrganismsOnly] = useState(false);
+  const [userApiKey, setUserApiKey] = useState<string>('');
+
+  // Load API key from localStorage on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem(STORAGE_KEY_API_KEY);
+    if (storedKey) {
+      setUserApiKey(storedKey);
+    }
+  }, []);
+
+  // Save API key to localStorage when changed
+  const updateApiKey = useCallback((key: string) => {
+    setUserApiKey(key);
+    if (key) {
+      localStorage.setItem(STORAGE_KEY_API_KEY, key);
+    } else {
+      localStorage.removeItem(STORAGE_KEY_API_KEY);
+    }
+  }, []);
+
+  // Helper to get headers with API key
+  const getApiHeaders = useCallback(() => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (userApiKey) {
+      headers['X-Gemini-Api-Key'] = userApiKey;
+    }
+    return headers;
+  }, [userApiKey]);
 
   const addDebugEntry = (entry: ApiDebugData) => {
     setApiDebugHistory(prev => [...prev, entry]);
@@ -68,12 +99,13 @@ export function useSimulation() {
       // Generate world
       const worldResponse = await fetch('/api/generate-world', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify(requestBody)
       });
 
       if (!worldResponse.ok) {
-        throw new Error('Failed to generate world');
+        const errorData = await worldResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate world');
       }
 
       const worldData: GenerateWorldResponse = await worldResponse.json();
@@ -94,7 +126,7 @@ export function useSimulation() {
 
       const textureResponse = await fetch('/api/generate-texture', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify(textureRequestBody)
       });
 
@@ -141,7 +173,7 @@ export function useSimulation() {
       setStatus('configuring');
       setIsGenerating(false);
     }
-  }, []);
+  }, [getApiHeaders]);
 
   const evolve = useCallback(async () => {
     if (!world) return;
@@ -162,12 +194,13 @@ export function useSimulation() {
     try {
       const response = await fetch('/api/evolve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify(evolveRequestBody)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to evolve world');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to evolve world');
       }
 
       const evolveData: EvolveResponse = await response.json();
@@ -203,7 +236,7 @@ export function useSimulation() {
       setError(err instanceof Error ? err.message : 'Failed to evolve');
       setIsEvolving(false);
     }
-  }, [world, generation, organisms, events, stats]);
+  }, [world, generation, organisms, events, stats, getApiHeaders]);
 
   const continueSimulation = useCallback(async () => {
     if (!evolveResult) {
@@ -236,6 +269,96 @@ export function useSimulation() {
     clearDebugHistory();
   }, []);
 
+  // Export world to JSON
+  const exportWorld = useCallback((): ExportedWorld | null => {
+    if (!world) return null;
+    
+    const exportData: ExportedWorld = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      generation,
+      world,
+      organisms,
+      events,
+      stats,
+      narrative
+    };
+    
+    return exportData;
+  }, [world, generation, organisms, events, stats, narrative]);
+
+  // Download world as JSON file
+  const downloadWorld = useCallback(() => {
+    const data = exportWorld();
+    if (!data) return;
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${data.world.name || 'petridise-world'}-gen${data.generation}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [exportWorld]);
+
+  // Import world from JSON
+  const importWorld = useCallback(async (file: File): Promise<boolean> => {
+    try {
+      const text = await file.text();
+      const data: ExportedWorld = JSON.parse(text);
+      
+      // Validate the imported data
+      if (!data.version || !data.world || !data.organisms) {
+        throw new Error('Invalid world file format');
+      }
+      
+      // Set all the state
+      setWorld(data.world);
+      setOrganisms(data.organisms);
+      setEvents(data.events || []);
+      setStats(data.stats || { ...DEFAULT_STATS, totalOrganisms: data.organisms.length });
+      setNarrative(data.narrative || 'Imported world');
+      setGeneration(data.generation || 1);
+      setMaxTicks(600); // Default simulation duration
+      setRealOrganismsOnly(false);
+      
+      // Generate texture for the imported world
+      setStatus('generating');
+      setIsGenerating(true);
+      
+      const textureRequestBody = {
+        biome: data.world.biome,
+        world: data.world
+      };
+
+      const textureResponse = await fetch('/api/generate-texture', {
+        method: 'POST',
+        headers: getApiHeaders(),
+        body: JSON.stringify(textureRequestBody)
+      });
+
+      let textureData: TextureConfig;
+      if (textureResponse.ok) {
+        textureData = await textureResponse.json();
+      } else {
+        textureData = getDefaultTexture(data.world.biome);
+      }
+
+      setTexture(textureData);
+      setStatus('running');
+      setIsGenerating(false);
+      setError(null);
+      
+      return true;
+    } catch (err) {
+      console.error('Error importing world:', err);
+      setError(err instanceof Error ? err.message : 'Failed to import world');
+      return false;
+    }
+  }, [getApiHeaders]);
+
   return {
     // State
     status,
@@ -252,13 +375,18 @@ export function useSimulation() {
     error,
     evolveResult,
     apiDebugHistory,
+    userApiKey,
     // Actions
     generateWorld,
     evolve,
     continueSimulation,
     completeRun,
     reset,
-    clearDebugHistory
+    clearDebugHistory,
+    updateApiKey,
+    exportWorld,
+    downloadWorld,
+    importWorld
   };
 }
 
