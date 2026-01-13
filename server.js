@@ -234,6 +234,60 @@ async function createServer() {
     }
   });
 
+  // Generate panoramic world image using Imagen
+  app.post('/api/generate-world-image', async (req, res) => {
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
+    }
+
+    try {
+      const { world } = req.body;
+      const prompt = generateWorldImagePrompt(world);
+      
+      console.log('Generating world image with prompt:', prompt);
+
+      const response = await fetch(`${IMAGEN_API_URL}?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instances: [
+            { prompt }
+          ],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: '16:9'
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Imagen API error - Status:', response.status);
+        console.error('Imagen API error - Body:', errorText);
+        return res.status(500).json({ error: 'Failed to generate world image' });
+      }
+
+      const data = await response.json();
+      
+      const generatedImage = data.generatedImages?.[0]?.image?.imageBytes ||
+                            data.predictions?.[0]?.bytesBase64Encoded ||
+                            data.images?.[0]?.bytesBase64Encoded;
+
+      if (!generatedImage) {
+        console.error('No image in Imagen response:', JSON.stringify(data).slice(0, 500));
+        return res.status(500).json({ error: 'No image generated' });
+      }
+
+      return res.json({
+        imageData: `data:image/png;base64,${generatedImage}`,
+        description: prompt
+      });
+    } catch (error) {
+      console.error('Error generating world image:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Use vite's connect instance as middleware
   app.use(vite.middlewares);
 
@@ -485,6 +539,48 @@ Environment: ${envDesc}.
 Style: National Geographic wildlife photography, studio quality, dramatic lighting.
 Sharp focus on the creature, shallow depth of field, professional nature photography.
 Highly detailed, lifelike textures, anatomically plausible fantasy creature design.`;
+}
+
+function generateWorldImagePrompt(world) {
+  const biome = world.biome || 'forest';
+  const temp = world.temperature ?? 20;
+  const humidity = world.humidity ?? 50;
+  
+  // Biome-specific landscape descriptions
+  const biomeScenes = {
+    'ocean': 'vast underwater seascape, coral reefs, sunlight filtering through water, schools of fish silhouettes, deep blue gradient',
+    'forest': 'lush ancient forest, towering trees, dappled sunlight through canopy, moss-covered ground, mystical atmosphere',
+    'desert': 'sweeping sand dunes, golden hour lighting, distant rocky outcrops, heat shimmer, clear sky with few clouds',
+    'tundra': 'frozen arctic landscape, snow-covered plains, aurora borealis in sky, ice formations, distant mountains',
+    'swamp': 'misty wetland, cypress trees draped with moss, murky water reflections, fog rising, twilight atmosphere',
+    'volcanic': 'dramatic volcanic landscape, glowing lava rivers, black rock formations, ash clouds, fiery orange sky',
+    'grassland': 'endless rolling hills of grass, wildflowers, dramatic clouds, golden savanna sunset, scattered acacia trees',
+    'cave': 'majestic underground cavern, bioluminescent formations, crystal stalactites, underground lake, ethereal lighting',
+    'alien': 'otherworldly alien planet, strange rock formations, multiple moons in sky, bioluminescent plants, purple and cyan colors'
+  };
+  
+  // Temperature-based atmosphere
+  let atmosphereDesc = '';
+  if (temp < 0) atmosphereDesc = 'cold and icy atmosphere, frost crystals in air';
+  else if (temp > 40) atmosphereDesc = 'hot and hazy atmosphere, heat distortion';
+  else atmosphereDesc = 'temperate and comfortable atmosphere';
+  
+  // Humidity effects
+  let humidityDesc = '';
+  if (humidity > 70) humidityDesc = 'misty and humid, water droplets visible';
+  else if (humidity < 30) humidityDesc = 'dry and arid, dust particles in air';
+  else humidityDesc = 'balanced moisture in air';
+  
+  const sceneDesc = biomeScenes[biome.toLowerCase()] || biomeScenes['forest'];
+  
+  return `Breathtaking panoramic landscape photograph of "${world.name}", a ${biome} environment.
+Scene: ${sceneDesc}.
+Atmosphere: ${atmosphereDesc}, ${humidityDesc}.
+Temperature feels like ${temp}°C.
+Style: National Geographic landscape photography, cinematic wide angle shot, golden hour lighting.
+Ultra-detailed, 8K quality, dramatic composition, nature documentary style.
+No text, no people, no animals in focus - pure landscape vista.
+Photorealistic, awe-inspiring natural beauty.`;
 }
 
 function generateFallbackTexture(biome, _world) {

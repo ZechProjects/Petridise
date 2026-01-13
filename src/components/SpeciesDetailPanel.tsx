@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Organism } from '@/types';
+import { pixelToRealSize, estimateWeight, compressImageForStorage } from '@/utils';
+
+const ORGANISM_IMAGE_CACHE_PREFIX = 'petridise_organism_image_';
 
 interface SpeciesDetailPanelProps {
   organism: Organism;
@@ -16,7 +19,28 @@ export const SpeciesDetailPanel: React.FC<SpeciesDetailPanelProps> = ({
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
 
+  // Create a cache key based on organism id and species
+  const cacheKey = `${ORGANISM_IMAGE_CACHE_PREFIX}${organism.id}_${organism.species}`;
+
+  // Load cached image on mount and auto-generate if not cached
+  useEffect(() => {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      setGeneratedImage(cached);
+    } else {
+      // Auto-generate image if not cached
+      generateImage();
+    }
+  }, [cacheKey]);
+
   const generateImage = async () => {
+    // Check cache first
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      setGeneratedImage(cached);
+      return;
+    }
+
     setIsGeneratingImage(true);
     setImageError(null);
 
@@ -36,6 +60,30 @@ export const SpeciesDetailPanel: React.FC<SpeciesDetailPanelProps> = ({
 
       const data = await response.json();
       setGeneratedImage(data.imageData);
+      
+      // Compress and cache in sessionStorage
+      try {
+        const compressed = await compressImageForStorage(data.imageData, 400, 400, 0.7);
+        sessionStorage.setItem(cacheKey, compressed);
+      } catch (storageError) {
+        // Quota exceeded - clear old organism images and try again
+        console.warn('SessionStorage quota exceeded, clearing old organism images...');
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key?.startsWith('petridise_organism_image_')) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => sessionStorage.removeItem(key));
+        try {
+          const compressed = await compressImageForStorage(data.imageData, 400, 400, 0.7);
+          sessionStorage.setItem(cacheKey, compressed);
+        } catch {
+          // Still failed, just skip caching
+          console.warn('Could not cache organism image');
+        }
+      }
     } catch (error) {
       console.error('Error generating organism image:', error);
       setImageError('Failed to generate image. Please try again.');
@@ -107,6 +155,47 @@ export const SpeciesDetailPanel: React.FC<SpeciesDetailPanelProps> = ({
 
         {/* Content */}
         <div className="p-4 space-y-4">
+          {/* Generated Image */}
+          {generatedImage && (
+            <div className="bg-white/5 rounded-lg overflow-hidden border border-white/10">
+              <img
+                src={generatedImage}
+                alt={organism.name}
+                className="w-full h-48 object-cover"
+              />
+            </div>
+          )}
+
+          {imageError && (
+            <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3 text-red-300">
+              {imageError}
+            </div>
+          )}
+
+          {/* Generate Image Button */}
+          {!generatedImage && (
+            <button
+              onClick={generateImage}
+              disabled={isGeneratingImage}
+              className={`w-full py-3 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
+                isGeneratingImage
+                  ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:scale-[1.02] shadow-lg shadow-purple-500/20'
+              }`}
+            >
+              {isGeneratingImage ? (
+                <>
+                  <LoadingSpinner />
+                  Generating Image...
+                </>
+              ) : (
+                <>
+                  📸 Generate Photo-Realistic Image
+                </>
+              )}
+            </button>
+          )}
+
           {/* Description */}
           {organism.description && (
             <div className="bg-white/5 rounded-lg p-3 border border-white/10">
@@ -117,7 +206,8 @@ export const SpeciesDetailPanel: React.FC<SpeciesDetailPanelProps> = ({
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-3">
             <StatItem label="Type" value={organism.type} icon={getTypeEmoji(organism.type)} />
-            <StatItem label="Size" value={`${organism.size}px`} icon="📏" />
+            <StatItem label="Size" value={pixelToRealSize(organism.size, organism.type).display} icon="📏" />
+            <StatItem label="Weight" value={estimateWeight(organism.size, organism.type).display} icon="⚖️" />
             <StatItem label="Speed" value={organism.speed.toFixed(1)} icon="💨" />
             <StatItem label="Energy" value={Math.round(organism.energy).toString()} icon="⚡" />
             <StatItem label="Age" value={`${organism.age} / ${organism.maxAge}`} icon="⏳" />
@@ -195,51 +285,33 @@ export const SpeciesDetailPanel: React.FC<SpeciesDetailPanelProps> = ({
             </div>
           )}
 
-          {/* Generated Image */}
+          {/* Regenerate Image Button (if already generated) */}
           {generatedImage && (
-            <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-              <h3 className="text-white font-bold mb-2 flex items-center gap-2">
-                <span>🖼️</span> Photo-Realistic Visualization
-              </h3>
-              <img
-                src={generatedImage}
-                alt={organism.name}
-                className="w-full rounded-lg border border-white/20"
-              />
-            </div>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem(cacheKey);
+                setGeneratedImage(null);
+                generateImage();
+              }}
+              disabled={isGeneratingImage}
+              className={`w-full py-2 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 ${
+                isGeneratingImage
+                  ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              }`}
+            >
+              {isGeneratingImage ? (
+                <>
+                  <LoadingSpinner />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  🔄 Regenerate Image
+                </>
+              )}
+            </button>
           )}
-
-          {imageError && (
-            <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3 text-red-300">
-              {imageError}
-            </div>
-          )}
-
-          {/* Generate Image Button */}
-          <button
-            onClick={generateImage}
-            disabled={isGeneratingImage}
-            className={`w-full py-3 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
-              isGeneratingImage
-                ? 'bg-white/10 text-white/40 cursor-not-allowed'
-                : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:scale-[1.02] shadow-lg shadow-purple-500/20'
-            }`}
-          >
-            {isGeneratingImage ? (
-              <>
-                <LoadingSpinner />
-                Generating Image...
-              </>
-            ) : generatedImage ? (
-              <>
-                🔄 Regenerate Image
-              </>
-            ) : (
-              <>
-                📸 Generate Photo-Realistic Image
-              </>
-            )}
-          </button>
         </div>
       </div>
     </div>

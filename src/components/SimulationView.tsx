@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { PetridiseGame, TextureConfig } from '@/game';
 import { Organism, WorldConfig, SimulationStats } from '@/types';
 import { SpeciesDetailPanel } from './SpeciesDetailPanel';
+import { WorldDetailPanel } from './WorldDetailPanel';
 
 interface SimulationViewProps {
   world: WorldConfig;
@@ -29,6 +30,7 @@ export const SimulationView: React.FC<SimulationViewProps> = ({
   const [simulationEnded, setSimulationEnded] = useState(false);
   const [currentOrganisms, setCurrentOrganisms] = useState<Organism[]>(organisms);
   const [selectedOrganism, setSelectedOrganism] = useState<Organism | null>(null);
+  const [showWorldDetails, setShowWorldDetails] = useState(false);
   const [immersiveMode, setImmersiveMode] = useState(false);
   const [showOrganismList, setShowOrganismList] = useState(false);
   const [stats, setStats] = useState<SimulationStats>({
@@ -165,10 +167,14 @@ export const SimulationView: React.FC<SimulationViewProps> = ({
               {/* Left: Logo & World Info */}
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🧫</span>
-                <div className="hidden sm:block">
-                  <h1 className="text-lg font-bold text-white/90">{world.name}</h1>
-                  <p className="text-xs text-white/50">Gen {Math.ceil(currentTick / maxTicks) || 1} • {world.biome}</p>
-                </div>
+                <button
+                  onClick={() => setShowWorldDetails(true)}
+                  className="hidden sm:block text-left hover:bg-white/10 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors"
+                  title="View world details"
+                >
+                  <h1 className="text-lg font-bold text-white/90 hover:text-white">{world.name}</h1>
+                  <p className="text-xs text-white/50">Gen {Math.ceil(currentTick / maxTicks) || 1} • {world.biome} • Click for details</p>
+                </button>
               </div>
 
               {/* Center: Progress & Controls */}
@@ -302,6 +308,17 @@ export const SimulationView: React.FC<SimulationViewProps> = ({
           organism={selectedOrganism}
           worldBiome={world.biome}
           onClose={() => setSelectedOrganism(null)}
+        />
+      )}
+
+      {/* World Details Panel */}
+      {showWorldDetails && (
+        <WorldDetailPanel
+          world={world}
+          organismCount={currentOrganisms.length}
+          currentTick={currentTick}
+          maxTicks={maxTicks}
+          onClose={() => setShowWorldDetails(false)}
         />
       )}
 
