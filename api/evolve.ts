@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
 
 function getApiKey(req: VercelRequest): string | undefined {
   // Check for user-provided key in header first, then fall back to env
@@ -119,12 +119,16 @@ Consider:
 - Population dynamics and carrying capacity
 - Possible disease outbreaks or natural disasters
 - Symbiotic relationships that may form
+- Evolution of locomotion types (organisms might develop flight, swimming, burrowing abilities)
 
 Return a JSON object with this exact structure:
 {
   "organisms": [
     // Each organism should have: id, name (common friendly name), species, description, ancestry (array of ancestor names), 
-    // generation (first generation this species appeared), type, x, y, size, color, energy, age, maxAge, speed, traits, behavior, diet, reproductionRate
+    // generation (first generation this species appeared), type, x, y, size, color, secondaryColor, energy, age, maxAge, speed, traits, 
+    // behavior (passive|aggressive|territorial|social|solitary|migratory|schooling|ambush|grazing),
+    // locomotion (walking|swimming|flying|hopping|slithering|burrowing|floating|crawling|gliding|sessile),
+    // diet, reproductionRate
   ],
   "events": [
     {
@@ -146,7 +150,15 @@ Return a JSON object with this exact structure:
   "nextGenerationSuggestions": ["List of 2-3 interesting things that might happen next generation"]
 }
 
+IMPORTANT FOR VISUAL IMPRESSIVENESS:
+- Maintain 20-35 organisms for an active simulation
+- Include multiple organisms of social/schooling species (3-6 of the same species)
+- Evolved organisms should have appropriate locomotion for their biome
+- Use vibrant, contrasting colors and secondary colors for patterns
+- Create dramatic events with major significance occasionally
+- Make speeds between 1.5-3.5 for active movement
+
 Be creative but scientifically plausible. Create dramatic moments and evolutionary breakthroughs.
-Generate at least 2-5 significant events. If organisms are thriving, allow reproduction to increase population (up to ~30 organisms).
+Generate at least 2-5 significant events. If organisms are thriving, allow reproduction to increase population (up to ~35 organisms).
 If organisms are struggling, show realistic die-offs and adaptations.`;
 }

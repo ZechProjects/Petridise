@@ -3,14 +3,13 @@ import express from 'express';
 import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import fs from 'fs';
+import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
 // Use Imagen 4 (fast version for quicker generation)
 const IMAGEN_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict';
 
@@ -488,7 +487,7 @@ Sharp focus on the creature, shallow depth of field, professional nature photogr
 Highly detailed, lifelike textures, anatomically plausible fantasy creature design.`;
 }
 
-function generateFallbackTexture(biome, world) {
+function generateFallbackTexture(biome, _world) {
   // Fallback color-based texture when Imagen is unavailable
   const biomeColors = {
     'aquatic': { bg: '#1a3a4a', gradient: ['#1a3a4a', '#2d5a6a', '#3d7a8a'], pattern: '#4d9aaa' },

@@ -41,15 +41,22 @@ export interface Organism {
   y: number;
   size: number;
   color: string;
+  secondaryColor?: string; // For patterns/details
   energy: number;
   age: number;
   maxAge: number;
   speed: number;
   traits: Trait[];
   behavior: BehaviorType;
+  locomotion: LocomotionType; // How the organism moves
   diet?: DietType;
   reproductionRate: number;
   generation?: number; // Which generation this organism first appeared
+  // Runtime state (not saved)
+  direction?: number; // Current facing direction in radians
+  targetX?: number; // For pathfinding
+  targetY?: number;
+  animationPhase?: number; // For idle animations
 }
 
 export type OrganismType = 
@@ -66,7 +73,10 @@ export type BehaviorType =
   | 'territorial'
   | 'social'
   | 'solitary'
-  | 'migratory';
+  | 'migratory'
+  | 'schooling'
+  | 'ambush'
+  | 'grazing';
 
 export type DietType =
   | 'photosynthesis'
@@ -74,6 +84,18 @@ export type DietType =
   | 'carnivore'
   | 'omnivore'
   | 'decomposer';
+
+export type LocomotionType =
+  | 'walking'
+  | 'swimming'
+  | 'flying'
+  | 'hopping'
+  | 'slithering'
+  | 'burrowing'
+  | 'floating'
+  | 'crawling'
+  | 'gliding'
+  | 'sessile'; // For plants/stationary organisms
 
 export interface Trait {
   name: string;

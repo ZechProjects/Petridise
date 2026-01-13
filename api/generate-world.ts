@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
 
 function getApiKey(req: VercelRequest): string | undefined {
   // Check for user-provided key in header first, then fall back to env
@@ -94,8 +94,9 @@ Do NOT invent fictional creatures. Each organism must be a real Earth species (p
     : `IMPORTANT: Use COMMON, FRIENDLY NAMES for organisms - like "Spotted Floater", "Crystal Muncher", "Swamp Hopper", etc.
 Avoid scientific Latin-style names. Make names fun, descriptive, and easy to remember.`;
 
-  const basePrompt = `You are a world generation AI for a life simulation game called Petridise. 
-Generate a complete starting environment with organisms in JSON format.
+  return `You are a world generation AI for a life simulation game called Petridise. 
+Generate a complete starting environment with MANY diverse organisms in JSON format.
+The simulation should be VISUALLY IMPRESSIVE and ACTIVE with lots of movement and interactions.
 
 ${useRandom ? 'Create a completely random and unique world with interesting characteristics.' : 
 `Use these world parameters as a starting point:
@@ -132,12 +133,13 @@ Return a JSON object with this exact structure:
       "type": "plant" | "herbivore" | "carnivore" | "omnivore" | "decomposer" | "microbe",
       "x": number (0 to world width),
       "y": number (0 to world height),
-      "size": number (5-50 pixels),
+      "size": number (8-45 pixels),
       "color": "hex color string like #FF5733",
-      "energy": number (50-100),
+      "secondaryColor": "hex color string for patterns/details",
+      "energy": number (60-100),
       "age": 0,
-      "maxAge": number (100-1000 ticks),
-      "speed": number (0.5-5.0),
+      "maxAge": number (200-800 ticks),
+      "speed": number (1.0-4.0 - make things FASTER for visual interest),
       "traits": [
         {
           "name": "trait name",
@@ -145,20 +147,39 @@ Return a JSON object with this exact structure:
           "description": "what this trait does"
         }
       ],
-      "behavior": "passive" | "aggressive" | "territorial" | "social" | "solitary" | "migratory",
+      "behavior": "passive" | "aggressive" | "territorial" | "social" | "solitary" | "migratory" | "schooling" | "ambush" | "grazing",
+      "locomotion": "walking" | "swimming" | "flying" | "hopping" | "slithering" | "burrowing" | "floating" | "crawling" | "gliding" | "sessile",
       "diet": "photosynthesis" | "herbivore" | "carnivore" | "omnivore" | "decomposer",
-      "reproductionRate": number (0.01-0.1)
+      "reproductionRate": number (0.02-0.08)
     }
   ],
   "narrative": "A creative 2-3 sentence description of this world and its ecosystem"
 }
 
-Generate 8-15 diverse organisms that form a balanced ecosystem with producers, consumers, and decomposers.
+CRITICAL REQUIREMENTS FOR AN IMPRESSIVE SIMULATION:
+1. Generate 20-30 diverse organisms for a lively ecosystem
+2. Include MULTIPLE organisms of the same species (3-5 of social/schooling species) for group behaviors
+3. Use varied locomotion types appropriate for the biome:
+   - Ocean/Swamp: mostly "swimming", "floating", some "crawling"
+   - Forest/Grassland: "walking", "flying", "hopping", "crawling", "slithering"
+   - Desert: "walking", "burrowing", "slithering", "hopping"
+   - Tundra: "walking", "flying", "swimming"
+   - Cave: "crawling", "flying", "slithering", "burrowing"
+   - Volcanic: "flying", "crawling", "hopping"
+   - Alien: mix of all types including "gliding", "floating"
+4. Plants should have locomotion: "sessile"
+5. Include social/schooling behaviors for fish-like or herd animals (they look amazing in groups)
+6. Use "ambush" for predators that hide and strike
+7. Use "grazing" for peaceful herbivores
+8. Make speeds between 1.5-3.5 for active movement (except plants)
+9. Spread organisms across the ENTIRE world - don't cluster them
+10. Use vibrant, contrasting colors for visual appeal
+11. Create a balanced food chain with producers, primary consumers, and apex predators
+
 ${realOrganismsOnly 
     ? 'Use ONLY real Earth species appropriate for the biome. Include real plants, animals, fungi, and microbes that would naturally exist in this environment.'
     : `Make the organisms creative and unique with interesting traits that match the biome.
 Use fun, memorable names that describe the creature (e.g., "Bubble Blower", "Spike Runner", "Glow Crawler").`}
-Ensure organisms are placed at valid coordinates within the world dimensions.`;
 
-  return basePrompt;
+Ensure organisms are placed at VARIED coordinates throughout the world dimensions for visual spread.`;
 }

@@ -1,5 +1,18 @@
 import Phaser from 'phaser';
-import { Organism, WorldConfig } from '@/types';
+import { Organism, WorldConfig, LocomotionType } from '@/types';
+
+// Particle system for visual effects
+interface ParticleConfig {
+  x: number;
+  y: number;
+  color: number;
+  alpha: number;
+  size: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+}
 
 // Fallback texture config (color-based)
 export interface FallbackTextureConfig {
@@ -43,6 +56,13 @@ export class MainScene extends Phaser.Scene {
   private callbacks: SimulationCallbacks | null = null;
   private background: Phaser.GameObjects.Graphics | null = null;
   private backgroundImage: Phaser.GameObjects.Image | null = null;
+  
+  // Enhanced visual systems
+  private particles: ParticleConfig[] = [];
+  private particleGraphics: Phaser.GameObjects.Graphics | null = null;
+  private trailGraphics: Phaser.GameObjects.Graphics | null = null;
+  private animationTime: number = 0;
+  private nextOrganismId: number = 1000; // For generating new organism IDs
 
   public get aquariumMode(): boolean {
     return this.isAquariumMode;
@@ -90,6 +110,7 @@ export class MainScene extends Phaser.Scene {
     this.children.sortChildrenFlag = true;
     
     this.createBackground();
+    this.createParticleSystems();
     this.createOrganisms();
     this.startSimulation();
     
@@ -99,6 +120,15 @@ export class MainScene extends Phaser.Scene {
       background: this.backgroundImage ? 'image' : (this.background ? 'graphics' : 'none'),
       worldSize: this.worldConfig ? `${this.worldConfig.width}x${this.worldConfig.height}` : 'unknown'
     });
+  }
+
+  private createParticleSystems() {
+    // Create graphics layers for particles and trails
+    this.trailGraphics = this.add.graphics();
+    this.trailGraphics.setDepth(50); // Below organisms but above background
+    
+    this.particleGraphics = this.add.graphics();
+    this.particleGraphics.setDepth(200); // Above organisms
   }
 
   private createBackground() {
@@ -327,6 +357,11 @@ export class MainScene extends Phaser.Scene {
       org.x = org.x * scaleX;
       org.y = org.y * scaleY;
       
+      // Set default locomotion if not provided (backward compatibility)
+      if (!org.locomotion) {
+        org.locomotion = this.inferLocomotion(org);
+      }
+      
       // Ensure within bounds
       const padding = org.size / 2;
       org.x = Phaser.Math.Clamp(org.x, padding, canvasWidth - padding);
@@ -348,20 +383,26 @@ export class MainScene extends Phaser.Scene {
     // Create a graphics object
     const graphics = this.add.graphics();
     const color = Phaser.Display.Color.HexStringToColor(org.color).color;
+    const secondaryColor = org.secondaryColor 
+      ? Phaser.Display.Color.HexStringToColor(org.secondaryColor).color 
+      : Phaser.Display.Color.IntegerToColor(color).darken(30).color;
     
-    // Draw the organism based on type
+    // Draw locomotion-specific appendages first (behind the body)
+    this.drawLocomotionFeatures(graphics, org, color, secondaryColor);
+    
+    // Draw the organism body based on type
     switch (org.type) {
       case 'plant':
-        this.drawPlant(graphics, org.size, color);
+        this.drawPlant(graphics, org.size, color, secondaryColor);
         break;
       case 'herbivore':
-        this.drawHerbivore(graphics, org.size, color);
+        this.drawHerbivore(graphics, org.size, color, secondaryColor, org.locomotion);
         break;
       case 'carnivore':
-        this.drawCarnivore(graphics, org.size, color);
+        this.drawCarnivore(graphics, org.size, color, secondaryColor, org.locomotion);
         break;
       case 'omnivore':
-        this.drawOmnivore(graphics, org.size, color);
+        this.drawOmnivore(graphics, org.size, color, secondaryColor, org.locomotion);
         break;
       case 'decomposer':
         this.drawDecomposer(graphics, org.size, color);
@@ -437,44 +478,223 @@ export class MainScene extends Phaser.Scene {
     return container;
   }
 
-  private drawPlant(graphics: Phaser.GameObjects.Graphics, size: number, color: number) {
-    // Draw a plant-like shape
-    graphics.fillStyle(color, 1);
-    graphics.fillCircle(0, 0, size / 3);
-    for (let i = 0; i < 5; i++) {
-      const angle = (i / 5) * Math.PI * 2;
-      const x = Math.cos(angle) * size / 2;
-      const y = Math.sin(angle) * size / 2;
-      graphics.fillCircle(x, y, size / 4);
+  private drawLocomotionFeatures(graphics: Phaser.GameObjects.Graphics, org: Organism, color: number, secondaryColor: number) {
+    const size = org.size;
+    const locomotion = org.locomotion || 'walking';
+    
+    switch (locomotion) {
+      case 'flying':
+      case 'gliding':
+        // Wings
+        graphics.fillStyle(secondaryColor, 0.7);
+        // Left wing
+        graphics.beginPath();
+        graphics.moveTo(-size / 6, 0);
+        graphics.lineTo(-size, -size / 3);
+        graphics.lineTo(-size * 0.8, size / 4);
+        graphics.closePath();
+        graphics.fillPath();
+        // Right wing
+        graphics.beginPath();
+        graphics.moveTo(-size / 6, 0);
+        graphics.lineTo(-size, size / 3);
+        graphics.lineTo(-size * 0.8, -size / 4);
+        graphics.closePath();
+        graphics.fillPath();
+        break;
+        
+      case 'swimming':
+        // Fins
+        graphics.fillStyle(secondaryColor, 0.8);
+        // Dorsal fin
+        graphics.fillTriangle(0, -size / 3, -size / 4, -size / 2, size / 4, -size / 2);
+        // Tail fin
+        graphics.fillTriangle(-size / 2, 0, -size * 0.8, -size / 3, -size * 0.8, size / 3);
+        // Pectoral fins
+        graphics.fillTriangle(size / 6, size / 4, 0, size / 2, size / 3, size / 3);
+        graphics.fillTriangle(size / 6, -size / 4, 0, -size / 2, size / 3, -size / 3);
+        break;
+        
+      case 'hopping':
+        // Strong back legs
+        graphics.fillStyle(secondaryColor, 0.9);
+        graphics.fillEllipse(-size / 3, size / 3, size / 3, size / 5);
+        graphics.fillEllipse(-size / 3, -size / 3, size / 3, size / 5);
+        break;
+        
+      case 'slithering':
+        // Curved body segments behind
+        graphics.fillStyle(color, 0.6);
+        for (let i = 1; i <= 3; i++) {
+          const segX = -size / 2 - (i * size / 4);
+          const segY = Math.sin(i * 0.8) * size / 6;
+          graphics.fillCircle(segX, segY, (size / 3) * (1 - i * 0.15));
+        }
+        break;
+        
+      case 'crawling':
+        // Multiple legs
+        graphics.lineStyle(2, secondaryColor, 0.8);
+        for (let i = 0; i < 4; i++) {
+          const legX = -size / 4 + (i * size / 6);
+          // Top legs
+          graphics.beginPath();
+          graphics.moveTo(legX, -size / 4);
+          graphics.lineTo(legX - size / 6, -size / 2);
+          graphics.strokePath();
+          // Bottom legs
+          graphics.beginPath();
+          graphics.moveTo(legX, size / 4);
+          graphics.lineTo(legX - size / 6, size / 2);
+          graphics.strokePath();
+        }
+        break;
+        
+      case 'burrowing':
+        // Claws/digging appendages
+        graphics.fillStyle(secondaryColor, 0.9);
+        graphics.fillTriangle(size / 2, 0, size * 0.7, -size / 4, size * 0.8, 0);
+        graphics.fillTriangle(size / 2, 0, size * 0.7, size / 4, size * 0.8, 0);
+        break;
+        
+      case 'floating':
+        // Tentacles/frills
+        graphics.lineStyle(2, secondaryColor, 0.6);
+        for (let i = 0; i < 5; i++) {
+          const angle = (i / 5) * Math.PI + Math.PI / 2;
+          graphics.beginPath();
+          graphics.moveTo(0, size / 4);
+          const tentX = Math.cos(angle) * size * 0.6;
+          const tentY = size / 4 + Math.abs(Math.sin(angle)) * size * 0.5;
+          graphics.lineTo(tentX, tentY);
+          graphics.strokePath();
+        }
+        break;
     }
   }
 
-  private drawHerbivore(graphics: Phaser.GameObjects.Graphics, size: number, color: number) {
+  private drawPlant(graphics: Phaser.GameObjects.Graphics, size: number, color: number, secondaryColor?: number) {
+    const secondary = secondaryColor || Phaser.Display.Color.IntegerToColor(color).darken(20).color;
+    
+    // Stem
+    graphics.fillStyle(secondary, 1);
+    graphics.fillRect(-size / 8, 0, size / 4, size / 2);
+    
+    // Main body (flower/leaves)
     graphics.fillStyle(color, 1);
-    graphics.fillEllipse(0, 0, size, size * 0.7);
+    graphics.fillCircle(0, 0, size / 3);
+    
+    // Petals/leaves
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      const x = Math.cos(angle) * size / 2.5;
+      const y = Math.sin(angle) * size / 2.5;
+      graphics.fillStyle(i % 2 === 0 ? color : secondary, 1);
+      graphics.fillEllipse(x, y, size / 4, size / 5);
+    }
+    
+    // Center
+    graphics.fillStyle(0xFFFF00, 0.8);
+    graphics.fillCircle(0, 0, size / 6);
+  }
+
+  private drawHerbivore(graphics: Phaser.GameObjects.Graphics, size: number, color: number, secondaryColor?: number, locomotion?: string) {
+    const secondary = secondaryColor || 0xFFFFFF;
+    
+    // Body shape varies by locomotion
+    graphics.fillStyle(color, 1);
+    if (locomotion === 'swimming') {
+      // Fish-like body
+      graphics.fillEllipse(0, 0, size, size * 0.5);
+      // Scales pattern
+      graphics.fillStyle(secondary, 0.3);
+      for (let i = 0; i < 3; i++) {
+        graphics.fillCircle(-size / 4 + i * size / 4, 0, size / 8);
+      }
+    } else if (locomotion === 'hopping') {
+      // Rounded body with emphasis on back
+      graphics.fillEllipse(-size / 8, 0, size * 0.8, size * 0.6);
+    } else {
+      // Default oval body
+      graphics.fillEllipse(0, 0, size, size * 0.7);
+    }
+    
+    // Spots/pattern
+    graphics.fillStyle(secondary, 0.4);
+    graphics.fillCircle(0, 0, size / 6);
+    graphics.fillCircle(-size / 4, -size / 8, size / 10);
+    
     // Eyes
     graphics.fillStyle(0xFFFFFF, 1);
-    graphics.fillCircle(size / 4, -size / 6, size / 8);
+    graphics.fillCircle(size / 3, -size / 8, size / 7);
     graphics.fillStyle(0x000000, 1);
-    graphics.fillCircle(size / 4 + 1, -size / 6, size / 16);
+    graphics.fillCircle(size / 3 + size / 14, -size / 8, size / 14);
   }
 
-  private drawCarnivore(graphics: Phaser.GameObjects.Graphics, size: number, color: number) {
+  private drawCarnivore(graphics: Phaser.GameObjects.Graphics, size: number, color: number, secondaryColor?: number, locomotion?: string) {
+    const secondary = secondaryColor || 0x000000;
+    
     graphics.fillStyle(color, 1);
-    // Triangular body
-    graphics.fillTriangle(-size / 2, size / 3, size / 2, 0, -size / 2, -size / 3);
-    // Eye
-    graphics.fillStyle(0xFF0000, 1);
-    graphics.fillCircle(size / 4, 0, size / 8);
+    
+    if (locomotion === 'swimming') {
+      // Shark-like
+      graphics.fillEllipse(0, 0, size * 1.1, size * 0.45);
+      // Stripes
+      graphics.fillStyle(secondary, 0.3);
+      graphics.fillRect(-size / 4, -size / 4, size / 10, size / 2);
+      graphics.fillRect(0, -size / 4, size / 10, size / 2);
+    } else if (locomotion === 'flying') {
+      // Hawk-like body
+      graphics.fillEllipse(0, 0, size * 0.9, size * 0.5);
+      // Beak
+      graphics.fillStyle(0xFFA500, 1);
+      graphics.fillTriangle(size / 2, 0, size * 0.7, -size / 10, size * 0.7, size / 10);
+    } else {
+      // Predator body - sleek and angular
+      graphics.beginPath();
+      graphics.moveTo(-size / 2, 0);
+      graphics.lineTo(-size / 4, -size / 3);
+      graphics.lineTo(size / 2, 0);
+      graphics.lineTo(-size / 4, size / 3);
+      graphics.closePath();
+      graphics.fillPath();
+    }
+    
+    // Menacing eyes
+    graphics.fillStyle(0xFFFF00, 1);
+    graphics.fillCircle(size / 4, -size / 10, size / 8);
+    graphics.fillStyle(0x000000, 1);
+    graphics.fillCircle(size / 4 + size / 16, -size / 10, size / 16);
+    
+    // Teeth/claws indicator
+    graphics.fillStyle(0xFFFFFF, 1);
+    graphics.fillTriangle(size / 2, 0, size / 2 + size / 8, -size / 12, size / 2 + size / 8, size / 12);
   }
 
-  private drawOmnivore(graphics: Phaser.GameObjects.Graphics, size: number, color: number) {
+  private drawOmnivore(graphics: Phaser.GameObjects.Graphics, size: number, color: number, secondaryColor?: number, locomotion?: string) {
+    const secondary = secondaryColor || 0xFFFFFF;
+    
     graphics.fillStyle(color, 1);
-    graphics.fillRoundedRect(-size / 2, -size / 2, size, size, size / 4);
+    
+    if (locomotion === 'swimming') {
+      graphics.fillEllipse(0, 0, size * 0.9, size * 0.6);
+    } else if (locomotion === 'flying') {
+      graphics.fillEllipse(0, 0, size * 0.7, size * 0.5);
+    } else {
+      graphics.fillRoundedRect(-size / 2, -size * 0.35, size, size * 0.7, size / 5);
+    }
+    
+    // Pattern
+    graphics.fillStyle(secondary, 0.5);
+    graphics.fillCircle(-size / 6, 0, size / 5);
+    
     // Eyes
     graphics.fillStyle(0xFFFFFF, 1);
-    graphics.fillCircle(size / 6, -size / 6, size / 10);
-    graphics.fillCircle(-size / 6, -size / 6, size / 10);
+    graphics.fillCircle(size / 5, -size / 8, size / 8);
+    graphics.fillCircle(size / 5, size / 8, size / 8);
+    graphics.fillStyle(0x000000, 1);
+    graphics.fillCircle(size / 5 + size / 16, -size / 8, size / 16);
+    graphics.fillCircle(size / 5 + size / 16, size / 8, size / 16);
   }
 
   private drawDecomposer(graphics: Phaser.GameObjects.Graphics, size: number, color: number) {
@@ -559,46 +779,95 @@ export class MainScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     const gravity = this.worldConfig?.gravity ?? 1;
+    
+    // Update animation time
+    this.animationTime += 0.05;
+    
+    // Clear trail graphics with fade effect
+    if (this.trailGraphics) {
+      this.trailGraphics.clear();
+    }
 
     this.organismData.forEach((org, id) => {
       const container = this.organisms.get(id);
       if (!container) return;
 
-      // Move based on type and behavior
-      if (org.type !== 'plant') {
-        const movement = this.calculateMovement(org);
-        org.x += movement.x;
-        org.y += movement.y;
+      // Initialize runtime state if needed
+      if (org.direction === undefined) org.direction = Math.random() * Math.PI * 2;
+      if (org.animationPhase === undefined) org.animationPhase = Math.random() * Math.PI * 2;
+      
+      // Update animation phase
+      org.animationPhase += 0.1;
 
-        // Apply gravity influence
-        org.y += (gravity - 1) * 0.1;
+      // Move based on type, behavior, and locomotion
+      if (org.type !== 'plant' && org.locomotion !== 'sessile') {
+        const movement = this.calculateEnhancedMovement(org);
+        
+        // Apply locomotion-specific modifiers
+        const locomotionMod = this.getLocomotionModifiers(org.locomotion);
+        
+        org.x += movement.x * locomotionMod.speedMult;
+        org.y += movement.y * locomotionMod.speedMult;
+        
+        // Update direction based on movement
+        if (Math.abs(movement.x) > 0.01 || Math.abs(movement.y) > 0.01) {
+          const targetDir = Math.atan2(movement.y, movement.x);
+          // Smooth rotation
+          org.direction = Phaser.Math.Angle.RotateTo(org.direction, targetDir, 0.1);
+        }
+
+        // Apply gravity influence (modified by locomotion)
+        org.y += (gravity - 1) * locomotionMod.gravityMult * 0.1;
+        
+        // Apply locomotion-specific vertical movement
+        if (org.locomotion === 'flying' || org.locomotion === 'gliding') {
+          org.y += Math.sin(this.animationTime * 2 + org.animationPhase) * 0.5;
+        } else if (org.locomotion === 'hopping') {
+          const hopPhase = (this.animationTime * 3 + org.animationPhase) % (Math.PI * 2);
+          if (hopPhase < Math.PI) {
+            org.y -= Math.sin(hopPhase) * 2;
+          }
+        } else if (org.locomotion === 'swimming' || org.locomotion === 'floating') {
+          org.y += Math.sin(this.animationTime + org.animationPhase) * 0.3;
+          org.x += Math.sin(this.animationTime * 0.5 + org.animationPhase) * 0.2;
+        }
 
         // Clamp to boundaries with padding for organism size
         const padding = org.size / 2;
         org.x = Phaser.Math.Clamp(org.x, padding, width - padding);
         org.y = Phaser.Math.Clamp(org.y, padding, height - padding);
 
-        // Bounce off edges by reversing direction
-        if (org.x <= padding || org.x >= width - padding) {
-          org.speed = Math.abs(org.speed); // Keep speed positive, direction handled in movement
-        }
-        if (org.y <= padding || org.y >= height - padding) {
-          org.speed = Math.abs(org.speed);
-        }
-
         // Update container position with smooth lerp
-        container.x = Phaser.Math.Linear(container.x, org.x, 0.1);
-        container.y = Phaser.Math.Linear(container.y, org.y, 0.1);
+        container.x = Phaser.Math.Linear(container.x, org.x, 0.15);
+        container.y = Phaser.Math.Linear(container.y, org.y, 0.15);
+        
+        // Apply rotation based on direction (for non-radial organisms)
+        if (org.type !== 'decomposer' && org.type !== 'microbe') {
+          container.rotation = Phaser.Math.Linear(container.rotation, org.direction, 0.1);
+        }
+        
+        // Apply idle animation (subtle scale pulsing)
+        const pulseScale = 1 + Math.sin(org.animationPhase) * 0.05;
+        container.setScale(pulseScale);
         
         // Update depth based on y position for proper layering (base of 100 to stay above background)
         container.setDepth(100 + Math.floor(container.y));
+        
+        // Spawn locomotion particles
+        this.spawnLocomotionParticles(org);
+      } else {
+        // Plants have gentle swaying animation
+        const sway = Math.sin(this.animationTime + org.animationPhase) * 0.05;
+        container.rotation = sway;
+        const pulseScale = 1 + Math.sin(org.animationPhase * 0.5) * 0.03;
+        container.setScale(pulseScale);
       }
 
       // Update energy
-      org.energy -= 0.05;
+      org.energy -= 0.03;
       if (org.type === 'plant') {
         // Plants gain energy from "photosynthesis"
-        org.energy += 0.1;
+        org.energy += 0.08;
       }
       org.energy = Phaser.Math.Clamp(org.energy, 0, 100);
 
@@ -611,55 +880,418 @@ export class MainScene extends Phaser.Scene {
         this.updateEnergyBar(energyBar, org);
       }
 
+      // Handle reproduction
+      if (org.energy > 80 && Math.random() < org.reproductionRate * 0.1) {
+        this.handleReproduction(org);
+      }
+
       // Check for death
       if (org.energy <= 0 || org.age >= org.maxAge) {
         this.handleOrganismDeath(id);
       }
     });
 
+    // Update particles
+    this.updateParticles();
+
     // Check for interactions
     this.checkInteractions();
   }
 
-  private calculateMovement(org: Organism): { x: number; y: number } {
+  private getLocomotionModifiers(locomotion: LocomotionType): { speedMult: number; gravityMult: number } {
+    switch (locomotion) {
+      case 'flying':
+        return { speedMult: 1.5, gravityMult: 0.1 };
+      case 'gliding':
+        return { speedMult: 1.2, gravityMult: 0.3 };
+      case 'swimming':
+        return { speedMult: 1.0, gravityMult: 0.2 };
+      case 'floating':
+        return { speedMult: 0.5, gravityMult: 0.0 };
+      case 'hopping':
+        return { speedMult: 1.3, gravityMult: 0.8 };
+      case 'slithering':
+        return { speedMult: 0.8, gravityMult: 1.0 };
+      case 'burrowing':
+        return { speedMult: 0.6, gravityMult: 1.2 };
+      case 'crawling':
+        return { speedMult: 0.7, gravityMult: 1.0 };
+      case 'walking':
+      default:
+        return { speedMult: 1.0, gravityMult: 1.0 };
+    }
+  }
+
+  private spawnLocomotionParticles(org: Organism) {
+    const color = Phaser.Display.Color.HexStringToColor(org.color).color;
+    
+    // Only spawn particles occasionally for performance
+    if (Math.random() > 0.3) return;
+    
+    switch (org.locomotion) {
+      case 'swimming':
+      case 'floating':
+        // Bubble particles
+        this.particles.push({
+          x: org.x - Math.cos(org.direction || 0) * org.size / 2,
+          y: org.y - Math.sin(org.direction || 0) * org.size / 2,
+          color: 0xADD8E6,
+          alpha: 0.6,
+          size: 2 + Math.random() * 3,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: -0.5 - Math.random() * 0.5,
+          life: 30,
+          maxLife: 30
+        });
+        break;
+        
+      case 'flying':
+      case 'gliding':
+        // Air trail particles
+        if (Math.random() > 0.5) {
+          this.particles.push({
+            x: org.x - Math.cos(org.direction || 0) * org.size / 2,
+            y: org.y,
+            color: 0xFFFFFF,
+            alpha: 0.3,
+            size: 1 + Math.random() * 2,
+            vx: -Math.cos(org.direction || 0) * 0.5,
+            vy: Math.random() * 0.3,
+            life: 20,
+            maxLife: 20
+          });
+        }
+        break;
+        
+      case 'hopping':
+        // Dust particles on landing
+        const hopPhase = (this.animationTime * 3 + (org.animationPhase || 0)) % (Math.PI * 2);
+        if (hopPhase > Math.PI - 0.2 && hopPhase < Math.PI + 0.2) {
+          for (let i = 0; i < 3; i++) {
+            this.particles.push({
+              x: org.x + (Math.random() - 0.5) * org.size,
+              y: org.y + org.size / 2,
+              color: 0x8B7355,
+              alpha: 0.5,
+              size: 2 + Math.random() * 2,
+              vx: (Math.random() - 0.5) * 2,
+              vy: -Math.random() * 1,
+              life: 15,
+              maxLife: 15
+            });
+          }
+        }
+        break;
+        
+      case 'slithering':
+        // Trail particles
+        this.particles.push({
+          x: org.x - Math.cos(org.direction || 0) * org.size / 2,
+          y: org.y - Math.sin(org.direction || 0) * org.size / 2,
+          color: color,
+          alpha: 0.2,
+          size: org.size / 4,
+          vx: 0,
+          vy: 0,
+          life: 40,
+          maxLife: 40
+        });
+        break;
+    }
+  }
+
+  private updateParticles() {
+    if (!this.particleGraphics) return;
+    
+    this.particleGraphics.clear();
+    
+    // Spawn ambient biome particles occasionally
+    this.spawnAmbientParticles();
+    
+    // Update and draw particles
+    this.particles = this.particles.filter(p => {
+      p.life--;
+      if (p.life <= 0) return false;
+      
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha = (p.life / p.maxLife) * p.alpha;
+      
+      this.particleGraphics!.fillStyle(p.color, p.alpha);
+      this.particleGraphics!.fillCircle(p.x, p.y, p.size);
+      
+      return true;
+    });
+    
+    // Limit max particles for performance
+    if (this.particles.length > 300) {
+      this.particles = this.particles.slice(-300);
+    }
+  }
+
+  private spawnAmbientParticles() {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const biome = this.worldConfig?.biome || 'forest';
+    
+    // Only spawn occasionally
+    if (Math.random() > 0.15) return;
+    
+    switch (biome) {
+      case 'ocean':
+      case 'swamp':
+        // Rising bubbles
+        this.particles.push({
+          x: Math.random() * width,
+          y: height + 10,
+          color: 0xADD8E6,
+          alpha: 0.4,
+          size: 2 + Math.random() * 4,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: -1 - Math.random() * 1.5,
+          life: 80,
+          maxLife: 80
+        });
+        break;
+        
+      case 'forest':
+      case 'grassland':
+        // Floating pollen/leaves
+        if (Math.random() > 0.5) {
+          this.particles.push({
+            x: Math.random() * width,
+            y: -10,
+            color: Math.random() > 0.7 ? 0x90EE90 : 0xFFFF99,
+            alpha: 0.5,
+            size: 2 + Math.random() * 3,
+            vx: (Math.random() - 0.5) * 1,
+            vy: 0.5 + Math.random() * 0.5,
+            life: 100,
+            maxLife: 100
+          });
+        }
+        break;
+        
+      case 'desert':
+        // Dust particles
+        this.particles.push({
+          x: -10,
+          y: Math.random() * height,
+          color: 0xD2B48C,
+          alpha: 0.3,
+          size: 1 + Math.random() * 2,
+          vx: 1 + Math.random() * 2,
+          vy: (Math.random() - 0.5) * 0.5,
+          life: 60,
+          maxLife: 60
+        });
+        break;
+        
+      case 'tundra':
+        // Snowflakes
+        this.particles.push({
+          x: Math.random() * width,
+          y: -10,
+          color: 0xFFFFFF,
+          alpha: 0.7,
+          size: 2 + Math.random() * 2,
+          vx: (Math.random() - 0.5) * 0.8,
+          vy: 0.8 + Math.random() * 0.5,
+          life: 120,
+          maxLife: 120
+        });
+        break;
+        
+      case 'volcanic':
+        // Ash and embers
+        if (Math.random() > 0.7) {
+          this.particles.push({
+            x: Math.random() * width,
+            y: height + 10,
+            color: Math.random() > 0.5 ? 0xFF4500 : 0x333333,
+            alpha: 0.6,
+            size: 1 + Math.random() * 3,
+            vx: (Math.random() - 0.5) * 1,
+            vy: -1.5 - Math.random() * 1,
+            life: 50,
+            maxLife: 50
+          });
+        }
+        break;
+        
+      case 'cave':
+        // Dripping water / glowing spores
+        if (Math.random() > 0.8) {
+          this.particles.push({
+            x: Math.random() * width,
+            y: 0,
+            color: Math.random() > 0.5 ? 0x00FFFF : 0x4169E1,
+            alpha: 0.5,
+            size: 2 + Math.random() * 2,
+            vx: 0,
+            vy: 1 + Math.random() * 0.5,
+            life: 70,
+            maxLife: 70
+          });
+        }
+        break;
+        
+      case 'alien':
+        // Strange glowing particles
+        this.particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          color: [0xFF00FF, 0x00FFFF, 0x00FF00, 0xFF6600][Math.floor(Math.random() * 4)],
+          alpha: 0.5,
+          size: 1 + Math.random() * 3,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          life: 40,
+          maxLife: 40
+        });
+        break;
+    }
+  }
+
+  private handleReproduction(parent: Organism) {
+    // Limit total organisms for performance
+    if (this.organismData.size >= 50) return;
+    
+    // Reduce parent energy
+    parent.energy -= 30;
+    
+    // Create offspring
+    const offspring: Organism = {
+      ...parent,
+      id: `org-${this.nextOrganismId++}`,
+      x: parent.x + (Math.random() - 0.5) * parent.size * 3,
+      y: parent.y + (Math.random() - 0.5) * parent.size * 3,
+      energy: 50,
+      age: 0,
+      direction: Math.random() * Math.PI * 2,
+      animationPhase: Math.random() * Math.PI * 2,
+      // Slight mutation in size and speed
+      size: parent.size * (0.9 + Math.random() * 0.2),
+      speed: parent.speed * (0.9 + Math.random() * 0.2),
+      generation: (parent.generation || 1) + 1
+    };
+    
+    // Add to simulation
+    this.organismData.set(offspring.id, offspring);
+    const container = this.createOrganismSprite(offspring);
+    this.organisms.set(offspring.id, container);
+    
+    // Birth particle effect
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      this.particles.push({
+        x: offspring.x,
+        y: offspring.y,
+        color: Phaser.Display.Color.HexStringToColor(offspring.color).color,
+        alpha: 0.8,
+        size: 3,
+        vx: Math.cos(angle) * 2,
+        vy: Math.sin(angle) * 2,
+        life: 20,
+        maxLife: 20
+      });
+    }
+  }
+
+  private calculateEnhancedMovement(org: Organism): { x: number; y: number } {
     const speed = org.speed;
     let dx = 0;
     let dy = 0;
 
     switch (org.behavior) {
       case 'passive':
-        // Random wandering
+        // Random wandering with momentum
         dx = (Math.random() - 0.5) * speed;
         dy = (Math.random() - 0.5) * speed;
         break;
+        
       case 'aggressive':
-        // Move toward nearest prey
+        // Move toward nearest prey with higher speed
         const prey = this.findNearestPrey(org);
         if (prey) {
           const angle = Math.atan2(prey.y - org.y, prey.x - org.x);
-          dx = Math.cos(angle) * speed;
-          dy = Math.sin(angle) * speed;
+          dx = Math.cos(angle) * speed * 1.5;
+          dy = Math.sin(angle) * speed * 1.5;
         } else {
           dx = (Math.random() - 0.5) * speed;
           dy = (Math.random() - 0.5) * speed;
         }
         break;
-      case 'territorial':
-        // Stay in area but move around
-        dx = (Math.random() - 0.5) * speed * 0.5;
-        dy = (Math.random() - 0.5) * speed * 0.5;
-        break;
-      case 'social':
-        // Move toward others of same species
-        const ally = this.findNearestAlly(org);
-        if (ally) {
-          const angle = Math.atan2(ally.y - org.y, ally.x - org.x);
-          dx = Math.cos(angle) * speed * 0.5;
-          dy = Math.sin(angle) * speed * 0.5;
+        
+      case 'ambush':
+        // Stay still, then burst toward prey when close
+        const nearbyPrey = this.findNearestPrey(org);
+        if (nearbyPrey && this.getDistance(org, nearbyPrey) < 80) {
+          const angle = Math.atan2(nearbyPrey.y - org.y, nearbyPrey.x - org.x);
+          dx = Math.cos(angle) * speed * 2.5;
+          dy = Math.sin(angle) * speed * 2.5;
         }
-        dx += (Math.random() - 0.5) * speed * 0.5;
-        dy += (Math.random() - 0.5) * speed * 0.5;
         break;
+        
+      case 'territorial':
+        // Stay in area but patrol
+        const patrolAngle = Math.sin(this.currentTick * 0.02 + parseInt(org.id, 36)) * Math.PI;
+        dx = Math.cos(patrolAngle) * speed * 0.5;
+        dy = Math.sin(patrolAngle) * speed * 0.5;
+        break;
+        
+      case 'social':
+      case 'schooling':
+        // Move toward center of nearby allies, align direction
+        const allies = this.findNearbyAllies(org, 100);
+        if (allies.length > 0) {
+          let avgX = 0, avgY = 0, avgDx = 0, avgDy = 0;
+          allies.forEach(ally => {
+            avgX += ally.x;
+            avgY += ally.y;
+            avgDx += Math.cos(ally.direction || 0);
+            avgDy += Math.sin(ally.direction || 0);
+          });
+          avgX /= allies.length;
+          avgY /= allies.length;
+          
+          // Cohesion - move toward center
+          const toCenter = Math.atan2(avgY - org.y, avgX - org.x);
+          dx = Math.cos(toCenter) * speed * 0.3;
+          dy = Math.sin(toCenter) * speed * 0.3;
+          
+          // Alignment - match average direction
+          dx += (avgDx / allies.length) * speed * 0.5;
+          dy += (avgDy / allies.length) * speed * 0.5;
+          
+          // Separation - avoid getting too close
+          allies.forEach(ally => {
+            const dist = this.getDistance(org, ally);
+            if (dist < org.size * 2) {
+              const away = Math.atan2(org.y - ally.y, org.x - ally.x);
+              dx += Math.cos(away) * speed * 0.5;
+              dy += Math.sin(away) * speed * 0.5;
+            }
+          });
+        } else {
+          dx = (Math.random() - 0.5) * speed;
+          dy = (Math.random() - 0.5) * speed;
+        }
+        break;
+        
+      case 'grazing':
+        // Slow, steady movement with occasional direction changes
+        if (Math.random() < 0.02) {
+          org.targetX = org.x + (Math.random() - 0.5) * 200;
+          org.targetY = org.y + (Math.random() - 0.5) * 200;
+        }
+        if (org.targetX !== undefined && org.targetY !== undefined) {
+          const toTarget = Math.atan2(org.targetY - org.y, org.targetX - org.x);
+          dx = Math.cos(toTarget) * speed * 0.5;
+          dy = Math.sin(toTarget) * speed * 0.5;
+        }
+        break;
+        
       case 'solitary':
         // Move away from others
         const nearest = this.findNearestOrganism(org);
@@ -672,15 +1304,27 @@ export class MainScene extends Phaser.Scene {
           dy = (Math.random() - 0.5) * speed;
         }
         break;
+        
       case 'migratory':
-        // Move in consistent direction with occasional change
-        const migrationAngle = (this.currentTick * 0.01) + (parseInt(org.id, 36) % 10);
+        // Move in consistent direction with gradual turning
+        const migrationAngle = (this.currentTick * 0.005) + (parseInt(org.id, 36) % 10);
         dx = Math.cos(migrationAngle) * speed;
         dy = Math.sin(migrationAngle) * speed * 0.5;
         break;
     }
 
     return { x: dx, y: dy };
+  }
+
+  private findNearbyAllies(org: Organism, radius: number): Organism[] {
+    const allies: Organism[] = [];
+    this.organismData.forEach(other => {
+      if (other.id === org.id) return;
+      if (other.species === org.species && this.getDistance(org, other) < radius) {
+        allies.push(other);
+      }
+    });
+    return allies;
   }
 
   private findNearestPrey(predator: Organism): Organism | null {
@@ -739,6 +1383,34 @@ export class MainScene extends Phaser.Scene {
     return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
   }
 
+  private inferLocomotion(org: Organism): LocomotionType {
+    // Infer locomotion based on organism type and biome
+    const biome = this.worldConfig?.biome || 'forest';
+    
+    if (org.type === 'plant') return 'sessile';
+    if (org.type === 'microbe') return 'floating';
+    
+    // Biome-specific defaults
+    if (biome === 'ocean' || biome === 'swamp') {
+      if (org.type === 'carnivore') return 'swimming';
+      if (org.type === 'herbivore') return Math.random() > 0.5 ? 'swimming' : 'floating';
+      return 'swimming';
+    }
+    
+    if (biome === 'cave') {
+      return Math.random() > 0.5 ? 'crawling' : 'flying';
+    }
+    
+    // Default based on behavior and type
+    if (org.behavior === 'migratory') return Math.random() > 0.5 ? 'flying' : 'walking';
+    if (org.type === 'carnivore') return Math.random() > 0.3 ? 'walking' : 'flying';
+    if (org.type === 'decomposer') return 'crawling';
+    
+    // Random variety for others
+    const locomotions: LocomotionType[] = ['walking', 'hopping', 'crawling', 'slithering'];
+    return locomotions[Math.floor(Math.random() * locomotions.length)];
+  }
+
   private checkInteractions() {
     const organisms = Array.from(this.organismData.values());
     
@@ -756,34 +1428,89 @@ export class MainScene extends Phaser.Scene {
   }
 
   private handleInteraction(a: Organism, b: Organism) {
-    // Predation
+    const midX = (a.x + b.x) / 2;
+    const midY = (a.y + b.y) / 2;
+    
+    // Predation - carnivore attacks
     if (a.type === 'carnivore' && (b.type === 'herbivore' || b.type === 'plant')) {
-      a.energy = Math.min(100, a.energy + 20);
-      b.energy -= 50;
+      a.energy = Math.min(100, a.energy + 25);
+      b.energy -= 60;
+      // Attack particles
+      this.spawnInteractionParticles(midX, midY, 0xFF4444, 0xFFFF00, 'attack');
     } else if (b.type === 'carnivore' && (a.type === 'herbivore' || a.type === 'plant')) {
-      b.energy = Math.min(100, b.energy + 20);
-      a.energy -= 50;
+      b.energy = Math.min(100, b.energy + 25);
+      a.energy -= 60;
+      this.spawnInteractionParticles(midX, midY, 0xFF4444, 0xFFFF00, 'attack');
     }
     
     // Herbivore eating plants
-    if (a.type === 'herbivore' && b.type === 'plant') {
-      a.energy = Math.min(100, a.energy + 10);
-      b.energy -= 20;
+    else if (a.type === 'herbivore' && b.type === 'plant') {
+      a.energy = Math.min(100, a.energy + 15);
+      b.energy -= 25;
+      // Eating particles
+      this.spawnInteractionParticles(midX, midY, 0x90EE90, 0xFFFFFF, 'eat');
     } else if (b.type === 'herbivore' && a.type === 'plant') {
-      b.energy = Math.min(100, b.energy + 10);
-      a.energy -= 20;
+      b.energy = Math.min(100, b.energy + 15);
+      a.energy -= 25;
+      this.spawnInteractionParticles(midX, midY, 0x90EE90, 0xFFFFFF, 'eat');
+    }
+    
+    // Social species grouping - energy boost when near allies
+    else if (a.species === b.species && (a.behavior === 'social' || a.behavior === 'schooling')) {
+      a.energy = Math.min(100, a.energy + 0.5);
+      b.energy = Math.min(100, b.energy + 0.5);
+    }
+  }
+
+  private spawnInteractionParticles(x: number, y: number, color1: number, color2: number, type: 'attack' | 'eat') {
+    const count = type === 'attack' ? 8 : 5;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = type === 'attack' ? 2 + Math.random() * 2 : 1 + Math.random();
+      this.particles.push({
+        x,
+        y,
+        color: Math.random() > 0.5 ? color1 : color2,
+        alpha: 0.9,
+        size: type === 'attack' ? 3 + Math.random() * 2 : 2 + Math.random() * 2,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - (type === 'attack' ? 1 : 0),
+        life: type === 'attack' ? 20 : 25,
+        maxLife: type === 'attack' ? 20 : 25
+      });
     }
   }
 
   private handleOrganismDeath(id: string) {
     const container = this.organisms.get(id);
-    if (container) {
-      // Fade out animation
+    const orgData = this.organismData.get(id);
+    
+    if (container && orgData) {
+      // Death particle burst
+      const color = Phaser.Display.Color.HexStringToColor(orgData.color).color;
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        this.particles.push({
+          x: container.x,
+          y: container.y,
+          color: i % 2 === 0 ? color : 0x808080,
+          alpha: 0.8,
+          size: 2 + Math.random() * 3,
+          vx: Math.cos(angle) * (1 + Math.random() * 2),
+          vy: Math.sin(angle) * (1 + Math.random() * 2),
+          life: 30,
+          maxLife: 30
+        });
+      }
+      
+      // Fade out animation with spin
       this.tweens.add({
         targets: container,
         alpha: 0,
-        scale: 0.5,
-        duration: 500,
+        scale: 0.3,
+        rotation: container.rotation + Math.PI,
+        duration: 600,
+        ease: 'Power2',
         onComplete: () => {
           container.destroy();
           this.organisms.delete(id);
@@ -830,28 +1557,79 @@ export class MainScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     const gravity = this.worldConfig?.gravity ?? 1;
+    
+    // Update animation time
+    this.animationTime += 0.05;
 
     // Just update movement and visuals, no game logic
     this.organismData.forEach((org, id) => {
       const container = this.organisms.get(id);
-      if (!container || org.type === 'plant') return;
+      if (!container) return;
+      
+      // Initialize runtime state if needed
+      if (org.direction === undefined) org.direction = Math.random() * Math.PI * 2;
+      if (org.animationPhase === undefined) org.animationPhase = Math.random() * Math.PI * 2;
+      
+      org.animationPhase += 0.08;
 
-      // Gentle movement
-      const movement = this.calculateMovement(org);
-      org.x += movement.x * 0.5; // Slower in aquarium mode
-      org.y += movement.y * 0.5;
-      org.y += (gravity - 1) * 0.05;
+      if (org.type !== 'plant' && org.locomotion !== 'sessile') {
+        // Gentle movement
+        const movement = this.calculateEnhancedMovement(org);
+        const locomotionMod = this.getLocomotionModifiers(org.locomotion);
+        
+        org.x += movement.x * locomotionMod.speedMult * 0.4; // Slower in aquarium mode
+        org.y += movement.y * locomotionMod.speedMult * 0.4;
+        org.y += (gravity - 1) * locomotionMod.gravityMult * 0.03;
+        
+        // Update direction
+        if (Math.abs(movement.x) > 0.01 || Math.abs(movement.y) > 0.01) {
+          const targetDir = Math.atan2(movement.y, movement.x);
+          org.direction = Phaser.Math.Angle.RotateTo(org.direction, targetDir, 0.05);
+        }
+        
+        // Locomotion-specific animations
+        if (org.locomotion === 'flying' || org.locomotion === 'gliding') {
+          org.y += Math.sin(this.animationTime * 2 + org.animationPhase) * 0.4;
+        } else if (org.locomotion === 'swimming' || org.locomotion === 'floating') {
+          org.y += Math.sin(this.animationTime + org.animationPhase) * 0.25;
+          org.x += Math.sin(this.animationTime * 0.5 + org.animationPhase) * 0.15;
+        }
 
-      // Clamp to boundaries
-      const padding = org.size / 2;
-      org.x = Phaser.Math.Clamp(org.x, padding, width - padding);
-      org.y = Phaser.Math.Clamp(org.y, padding, height - padding);
+        // Clamp to boundaries
+        const padding = org.size / 2;
+        org.x = Phaser.Math.Clamp(org.x, padding, width - padding);
+        org.y = Phaser.Math.Clamp(org.y, padding, height - padding);
 
-      // Smooth position update
-      container.x = Phaser.Math.Linear(container.x, org.x, 0.08);
-      container.y = Phaser.Math.Linear(container.y, org.y, 0.08);
-      container.setDepth(100 + Math.floor(container.y));
+        // Smooth position update
+        container.x = Phaser.Math.Linear(container.x, org.x, 0.08);
+        container.y = Phaser.Math.Linear(container.y, org.y, 0.08);
+        
+        // Apply rotation
+        if (org.type !== 'decomposer' && org.type !== 'microbe') {
+          container.rotation = Phaser.Math.Linear(container.rotation, org.direction, 0.05);
+        }
+        
+        // Idle animation
+        const pulseScale = 1 + Math.sin(org.animationPhase) * 0.04;
+        container.setScale(pulseScale);
+        
+        container.setDepth(100 + Math.floor(container.y));
+        
+        // Occasional particles in aquarium mode
+        if (Math.random() < 0.1) {
+          this.spawnLocomotionParticles(org);
+        }
+      } else {
+        // Plants sway
+        const sway = Math.sin(this.animationTime * 0.7 + org.animationPhase) * 0.04;
+        container.rotation = sway;
+        const pulseScale = 1 + Math.sin(org.animationPhase * 0.3) * 0.02;
+        container.setScale(pulseScale);
+      }
     });
+    
+    // Update particles
+    this.updateParticles();
   }
 
   public pauseSimulation() {
