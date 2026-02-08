@@ -1,0 +1,184 @@
+{
+  "version": "1.0",
+  "exportedAt": "2026-02-08T13:45:23.377Z",
+  "generation": 1,
+  "world": {
+    "name": "Neon Spire Expanse",
+    "width": 1000,
+    "height": 700,
+    "gravity": 1.5,
+    "temperature": 65,
+    "humidity": 50,
+    "compounds": {
+      "oxygen": 77,
+      "water": 60,
+      "nitrogen": 78,
+      "carbon": 0.04,
+      "minerals": 60
+    },
+    "biome": "alien"
+  },
+  "organisms": [
+    {
+      "id": "sm-001",
+      "name": "Slime-Melt",
+      "species": "Melters",
+      "description": "A gelatinous decomposer that breaks down fallen organisms into usable minerals.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "decomposer",
+      "x": 1726.624364339141,
+      "y": 934.9840286295364,
+      "size": 20,
+      "color": "#00FF00",
+      "energy": 31.999999999999318,
+      "age": 600,
+      "maxAge": 1000,
+      "speed": 0.5,
+      "traits": [
+        {
+          "name": "Acidic Secretion",
+          "value": 90,
+          "description": "Quickly dissolves organic matter for energy."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "decomposer",
+      "reproductionRate": 0.05,
+      "locomotion": "crawling",
+      "direction": 1.761751458414435,
+      "animationPhase": 66.28767987642532
+    },
+    {
+      "id": "cs-001",
+      "name": "Crystal Shrub",
+      "species": "Crystals",
+      "description": "A hardy, crystalline plant that stores energy from the planet's intense mineral soil.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "plant",
+      "x": 1440,
+      "y": 837,
+      "size": 50,
+      "color": "#AACCFF",
+      "energy": 70.14999999999999,
+      "age": 600,
+      "maxAge": 900,
+      "speed": 0,
+      "traits": [
+        {
+          "name": "Reflective Shell",
+          "value": 75,
+          "description": "Protects against extreme heat and light radiation."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.01,
+      "locomotion": "sessile",
+      "direction": 3.3148491892222864,
+      "animationPhase": 69.09011916228263
+    },
+    {
+      "id": "org-1000",
+      "name": "Sky-Balloon",
+      "species": "Floaters",
+      "description": "A gas-filled plant that drifts through the air, filtering minerals from the thick oxygen clouds.",
+      "ancestry": [],
+      "generation": 2,
+      "type": "plant",
+      "x": 921.7631049502055,
+      "y": 204.67750755962254,
+      "size": 31.85910734658008,
+      "color": "#FF99FF",
+      "energy": 67.599999999999,
+      "age": 352,
+      "maxAge": 600,
+      "speed": 0.5206356196508133,
+      "traits": [
+        {
+          "name": "Buoyancy",
+          "value": 90,
+          "description": "Allows the organism to float effortlessly in high gravity."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.03,
+      "locomotion": "sessile",
+      "direction": 4.436513381635933,
+      "animationPhase": 41.46194853823309
+    },
+    {
+      "id": "org-1001",
+      "name": "Long-Snout",
+      "species": "Snouters",
+      "description": "A fast predator with a specialized nose for sniffing out Bounce-Berries hidden in the brush.",
+      "ancestry": [],
+      "generation": 2,
+      "type": "carnivore",
+      "x": 1581.1452625623858,
+      "y": 901.9897315959627,
+      "size": 48.02484001421868,
+      "color": "#FF8800",
+      "energy": 45.76999999999984,
+      "age": 141,
+      "maxAge": 450,
+      "speed": 4.846175583055021,
+      "traits": [
+        {
+          "name": "Scent Tracking",
+          "value": 95,
+          "description": "Increases the ability to find prey from long distances."
+        }
+      ],
+      "behavior": "aggressive",
+      "diet": "carnivore",
+      "reproductionRate": 0.02,
+      "locomotion": "flying",
+      "direction": -1.9869143444516844,
+      "animationPhase": 21.27247599103046
+    },
+    {
+      "id": "org-1002",
+      "name": "Crystal Shrub",
+      "species": "Crystals",
+      "description": "A hardy, crystalline plant that stores energy from the planet's intense mineral soil.",
+      "ancestry": [],
+      "generation": 2,
+      "type": "plant",
+      "x": 1454.6052528719179,
+      "y": 822.4723884424941,
+      "size": 54.018933273120915,
+      "color": "#AACCFF",
+      "energy": 50.19999999999999,
+      "age": 4,
+      "maxAge": 900,
+      "speed": 0,
+      "traits": [
+        {
+          "name": "Reflective Shell",
+          "value": 75,
+          "description": "Protects against extreme heat and light radiation."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.01,
+      "locomotion": "sessile",
+      "direction": 5.637498466469571,
+      "animationPhase": 8.188711865306825
+    }
+  ],
+  "events": [],
+  "stats": {
+    "totalOrganisms": 6,
+    "births": 0,
+    "deaths": 4,
+    "extinctions": [],
+    "newSpecies": [],
+    "dominantSpecies": "Floaters",
+    "biodiversityIndex": 0.6666666666666666
+  },
+  "narrative": "The Neon Spire Expanse is a high-gravity world where life has adapted with bioluminescent displays and buoyant structures to survive the crushing atmospheric pressure. From the grounded Crystal Shrubs to the floating Sky-Balloons, this ecosystem thrives on a rich mineral base and intense oxygen levels. Predators like the Long-Snout and Shadow-Darter engage in a high-speed dance amidst the glowing flora of this vibrant alien landscape."
+}

@@ -191,6 +191,13 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               >
                 🌿 Earth Biome
               </a>
+              <a
+                href="/example-worlds/world3-alien.json"
+                download="world3-alien.json"
+                className="flex-1 text-center px-3 py-1.5 text-xs font-medium rounded-lg bg-petri-highlight/50 hover:bg-petri-glow/70 text-petri-glow hover:text-white transition-colors"
+              >
+                👽 Alien Biome
+              </a>
             </div>
           </div>
         </div>

@@ -105,6 +105,7 @@ Don't have a Gemini API key? You can still explore Petridise by importing a pre-
 1. Download an example world from the [`public/example-worlds/`](public/example-worlds/) folder:
    - [world1-general.json](public/example-worlds/world1-general.json) — A general AI-generated ecosystem
    - [world2-earth.json](public/example-worlds/world2-earth.json) — An Earth-based biome with real organisms
+   - [world3-alien.json](public/example-worlds/world3-alien.json) — An alien biome with alien organisms
 2. In the Config Panel, click **Import World** and select the downloaded JSON file.
 3. The simulation will load and run — no API key required!
 
