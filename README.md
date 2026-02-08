@@ -98,6 +98,18 @@ This starts an Express dev server that proxies the Gemini/Imagen API calls and s
 
 > **Tip:** You can also paste your API key directly in the UI under 🔑 _Gemini API Key_ — no `.env` file needed.
 
+### Try Without an API Key
+
+Don't have a Gemini API key? You can still explore Petridise by importing a pre-built world snapshot:
+
+1. Download an example world from the [`example-worlds/`](example-worlds/) folder:
+   - [world1-general.json](example-worlds/world1-general.json) — A general AI-generated ecosystem
+   - [world2-earth.json](example-worlds/world2-earth.json) — An Earth-based biome with real organisms
+2. In the Config Panel, click **Import World** and select the downloaded JSON file.
+3. The simulation will load and run — no API key required!
+
+> **Note:** Evolution between generations still requires a Gemini API key, but you can freely watch and interact with the imported simulation.
+
 ### Production Build
 
 ```bash

@@ -1,0 +1,394 @@
+{
+  "version": "1.0",
+  "exportedAt": "2026-02-08T13:35:28.951Z",
+  "generation": 1,
+  "world": {
+    "name": "The Gossamer Mire",
+    "width": 1200,
+    "height": 800,
+    "gravity": 1,
+    "temperature": 28,
+    "humidity": 92,
+    "compounds": {
+      "oxygen": 21,
+      "water": 85,
+      "nitrogen": 72,
+      "carbon": 15,
+      "minerals": 40
+    },
+    "biome": "swamp"
+  },
+  "organisms": [
+    {
+      "id": "duckweed-001",
+      "name": "Green Carpet",
+      "species": "Duckweed",
+      "description": "A tiny floating plant that thrives on the water surface, absorbing nutrients directly from the mire.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "plant",
+      "x": 400,
+      "y": 177.1875,
+      "size": 5,
+      "color": "#99FF33",
+      "energy": 53.4999999999998,
+      "age": 70,
+      "maxAge": 200,
+      "speed": 0.5,
+      "traits": [
+        {
+          "name": "Surface Spread",
+          "value": 85,
+          "description": "Increases efficiency of nutrient absorption from water."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.08,
+      "locomotion": "sessile",
+      "direction": 2.642721009450988,
+      "animationPhase": 9.780887597248478
+    },
+    {
+      "id": "cypress-001",
+      "name": "Mossy Sentinel",
+      "species": "Bald Cypress",
+      "description": "A tall, water-tolerant tree with flared trunks and woody 'knees' protruding from the water.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "plant",
+      "x": 960,
+      "y": 472.49999999999994,
+      "size": 50,
+      "color": "#4A5D23",
+      "energy": 100,
+      "age": 70,
+      "maxAge": 1000,
+      "speed": 0,
+      "traits": [
+        {
+          "name": "Flood Resistance",
+          "value": 95,
+          "description": "Allows the tree to survive in submerged soil for long periods."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.01,
+      "locomotion": "sessile",
+      "direction": 3.152246724194592,
+      "animationPhase": 11.26847888561126
+    },
+    {
+      "id": "snail-001",
+      "name": "Golden Slider",
+      "species": "Apple Snail",
+      "description": "A large freshwater snail that grazes on aquatic vegetation with its rasping tongue.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "herbivore",
+      "x": 415.1258896685513,
+      "y": 193.83589381282465,
+      "size": 15,
+      "color": "#F5DEB3",
+      "energy": 67.89999999999992,
+      "age": 70,
+      "maxAge": 400,
+      "speed": 0.8,
+      "traits": [
+        {
+          "name": "Shell Hardness",
+          "value": 70,
+          "description": "Provides protection against small predators."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "herbivore",
+      "reproductionRate": 0.05,
+      "locomotion": "swimming",
+      "direction": -2.7384262689740084,
+      "animationPhase": 12.160732677749076
+    },
+    {
+      "id": "dragonfly-001",
+      "name": "Blue Skimmer",
+      "species": "Blue Dasher",
+      "description": "A swift aerial predator with four wings that can hover and dart with extreme precision.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "carnivore",
+      "x": 815.5021861938484,
+      "y": 268.5885196227012,
+      "size": 12,
+      "color": "#00BFFF",
+      "energy": 57.89999999999992,
+      "age": 70,
+      "maxAge": 300,
+      "speed": 4.5,
+      "traits": [
+        {
+          "name": "Agility",
+          "value": 90,
+          "description": "Highly effective at catching small insects in mid-air."
+        }
+      ],
+      "behavior": "aggressive",
+      "diet": "carnivore",
+      "reproductionRate": 0.04,
+      "locomotion": "swimming",
+      "direction": -2.926689285232174,
+      "animationPhase": 11.879620786301256
+    },
+    {
+      "id": "alligator-001",
+      "name": "Ancient Maw",
+      "species": "American Alligator",
+      "description": "A powerful apex predator that lurks just beneath the water surface, waiting for movement.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "carnivore",
+      "x": 1526.573498323466,
+      "y": 685.0068787723156,
+      "size": 48,
+      "color": "#2F4F4F",
+      "energy": 97.89999999999992,
+      "age": 70,
+      "maxAge": 800,
+      "speed": 2.2,
+      "traits": [
+        {
+          "name": "Ambush Mastery",
+          "value": 95,
+          "description": "Increases damage of the first strike when undetected."
+        }
+      ],
+      "behavior": "territorial",
+      "diet": "carnivore",
+      "reproductionRate": 0.02,
+      "locomotion": "swimming",
+      "direction": -2.0968925261581024,
+      "animationPhase": 9.734690020968477
+    },
+    {
+      "id": "frog-001",
+      "name": "Bellowing Bull",
+      "species": "American Bullfrog",
+      "description": "A large amphibian with a deep call that eats almost anything it can fit in its mouth.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "omnivore",
+      "x": 646.8086572593162,
+      "y": 231.02797402864465,
+      "size": 20,
+      "color": "#556B2F",
+      "energy": 62.89999999999992,
+      "age": 70,
+      "maxAge": 500,
+      "speed": 1.5,
+      "traits": [
+        {
+          "name": "Powerful Leap",
+          "value": 80,
+          "description": "Allows for quick escapes and rapid lunges toward prey."
+        }
+      ],
+      "behavior": "solitary",
+      "diet": "omnivore",
+      "reproductionRate": 0.06,
+      "locomotion": "swimming",
+      "direction": -0.4839449600871728,
+      "animationPhase": 8.904668430935287
+    },
+    {
+      "id": "mushroom-001",
+      "name": "Shelf Sprout",
+      "species": "Oyster Mushroom",
+      "description": "A fan-shaped fungus that breaks down dead wood and returns nutrients to the soil.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "decomposer",
+      "x": 973.2747146588007,
+      "y": 494.9033874931893,
+      "size": 12,
+      "color": "#FDF5E6",
+      "energy": 57.89999999999992,
+      "age": 70,
+      "maxAge": 150,
+      "speed": 0.1,
+      "traits": [
+        {
+          "name": "Mycelial Network",
+          "value": 88,
+          "description": "Efficiently extracts energy from decaying organic matter."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "decomposer",
+      "reproductionRate": 0.09,
+      "locomotion": "swimming",
+      "direction": 0.015818525398788114,
+      "animationPhase": 10.648351216176403
+    },
+    {
+      "id": "amoeba-001",
+      "name": "Shape Shifter",
+      "species": "Amoeba",
+      "description": "A microscopic single-celled organism that engulfs organic particles through phagocytosis.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "microbe",
+      "x": 156.89059880539313,
+      "y": 825.4925068250172,
+      "size": 6,
+      "color": "#FFFFFF",
+      "energy": 47.89999999999992,
+      "age": 70,
+      "maxAge": 100,
+      "speed": 0.6,
+      "traits": [
+        {
+          "name": "Adaptability",
+          "value": 75,
+          "description": "Can survive in various concentrations of swamp compounds."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "decomposer",
+      "reproductionRate": 0.1,
+      "locomotion": "floating",
+      "direction": 2.1680438152163046,
+      "animationPhase": 10.621501779436729
+    },
+    {
+      "id": "cattail-001",
+      "name": "Brown Spike",
+      "species": "Broadleaf Cattail",
+      "description": "A tall marsh plant with a distinctive brown, cylindrical flower spike.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "plant",
+      "x": 80,
+      "y": 59.06249999999999,
+      "size": 35,
+      "color": "#8B4513",
+      "energy": 93.4999999999998,
+      "age": 70,
+      "maxAge": 450,
+      "speed": 0,
+      "traits": [
+        {
+          "name": "Seed Dispersion",
+          "value": 82,
+          "description": "Uses wind to spread seeds over large distances."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.03,
+      "locomotion": "sessile",
+      "direction": 4.635467337363788,
+      "animationPhase": 10.221689859195228
+    },
+    {
+      "id": "strider-001",
+      "name": "Surface Glider",
+      "species": "Water Strider",
+      "description": "A long-legged insect that uses surface tension to walk on water without sinking.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "carnivore",
+      "x": 1450.9856984770072,
+      "y": 233.78451711079543,
+      "size": 10,
+      "color": "#000000",
+      "energy": 52.89999999999992,
+      "age": 70,
+      "maxAge": 250,
+      "speed": 3,
+      "traits": [
+        {
+          "name": "Surface Tension",
+          "value": 100,
+          "description": "Provides the ability to move rapidly across the water's surface."
+        }
+      ],
+      "behavior": "social",
+      "diet": "carnivore",
+      "reproductionRate": 0.07,
+      "locomotion": "swimming",
+      "direction": -2.720932467425365,
+      "animationPhase": 11.938086181970911
+    },
+    {
+      "id": "org-1000",
+      "name": "Blue Skimmer",
+      "species": "Blue Dasher",
+      "description": "A swift aerial predator with four wings that can hover and dart with extreme precision.",
+      "ancestry": [],
+      "generation": 2,
+      "type": "carnivore",
+      "x": 785.3808062920564,
+      "y": 256.04542305524797,
+      "size": 10.855983822222331,
+      "color": "#00BFFF",
+      "energy": 48.07999999999993,
+      "age": 64,
+      "maxAge": 300,
+      "speed": 4.624331987407444,
+      "traits": [
+        {
+          "name": "Agility",
+          "value": 90,
+          "description": "Highly effective at catching small insects in mid-air."
+        }
+      ],
+      "behavior": "aggressive",
+      "diet": "carnivore",
+      "reproductionRate": 0.04,
+      "locomotion": "swimming",
+      "direction": -2.964220487813068,
+      "animationPhase": 9.56523607647031
+    },
+    {
+      "id": "org-1001",
+      "name": "Green Carpet",
+      "species": "Duckweed",
+      "description": "A tiny floating plant that thrives on the water surface, absorbing nutrients directly from the mire.",
+      "ancestry": [],
+      "generation": 2,
+      "type": "plant",
+      "x": 398.10972549504976,
+      "y": 184.05612482862676,
+      "size": 5.0820245271571,
+      "color": "#99FF33",
+      "energy": 52.44999999999986,
+      "age": 49,
+      "maxAge": 200,
+      "speed": 0.5439592307368958,
+      "traits": [
+        {
+          "name": "Surface Spread",
+          "value": 85,
+          "description": "Increases efficiency of nutrient absorption from water."
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.08,
+      "locomotion": "sessile",
+      "direction": 0.06536452243947762,
+      "animationPhase": 6.092595054851205
+    }
+  ],
+  "events": [],
+  "stats": {
+    "totalOrganisms": 12,
+    "births": 0,
+    "deaths": -2,
+    "extinctions": [],
+    "newSpecies": [],
+    "dominantSpecies": "Duckweed",
+    "biodiversityIndex": 0.8333333333333334
+  },
+  "narrative": "The Gossamer Mire is a humid, nutrient-rich wetland dominated by ancient Bald Cypress trees and a dense carpet of Duckweed. In this balanced ecosystem, energy flows from the sun-soaked flora to opportunistic herbivores like the Apple Snail, while apex predators like the Alligator maintain the population of larger inhabitants. Decomposers like the Oyster Mushroom and Amoeba work tirelessly in the shadows, recycling the mire's waste back into the life-giving sludge."
+}

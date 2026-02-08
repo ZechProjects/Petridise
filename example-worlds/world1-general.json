@@ -1,0 +1,394 @@
+{
+  "version": "1.0",
+  "exportedAt": "2026-02-08T13:33:30.319Z",
+  "generation": 1,
+  "world": {
+    "name": "Neon Gloom-Shroom Hollow",
+    "width": 1200,
+    "height": 800,
+    "gravity": 0.7,
+    "temperature": 15,
+    "humidity": 85,
+    "compounds": {
+      "oxygen": 18,
+      "water": 45,
+      "nitrogen": 22,
+      "carbon": 10,
+      "minerals": 5
+    },
+    "biome": "alien"
+  },
+  "organisms": [
+    {
+      "id": "gs-001",
+      "name": "Glow-Stalk",
+      "species": "Luminescents",
+      "description": "A tall, vibrating plant that emits a soft cyan light to attract pollinators.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "plant",
+      "x": 320,
+      "y": 767.8124999999999,
+      "size": 45,
+      "color": "#33FFBD",
+      "energy": 100,
+      "age": 135,
+      "maxAge": 800,
+      "speed": 0.1,
+      "traits": [
+        {
+          "name": "Luminescence",
+          "value": 80,
+          "description": "Attracts nearby creatures and provides energy through light synthesis"
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.04,
+      "locomotion": "sessile",
+      "direction": 2.0268618131754335,
+      "animationPhase": 19.43548255053887
+    },
+    {
+      "id": "slf-002",
+      "name": "Sky-Lace Fern",
+      "species": "Drifters",
+      "description": "A delicate purple plant that uses gas bladders to float just above the ground.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "plant",
+      "x": 1520,
+      "y": 354.375,
+      "size": 30,
+      "color": "#A233FF",
+      "energy": 96.74999999999962,
+      "age": 135,
+      "maxAge": 600,
+      "speed": 0.8,
+      "traits": [
+        {
+          "name": "Buoyancy",
+          "value": 95,
+          "description": "Allows the plant to hover and avoid ground-based herbivores"
+        }
+      ],
+      "behavior": "migratory",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.03,
+      "locomotion": "sessile",
+      "direction": 3.0595590353063873,
+      "animationPhase": 14.296832662520865
+    },
+    {
+      "id": "sdm-003",
+      "name": "Sugar-Drop Moss",
+      "species": "Carpets",
+      "description": "A sticky, bright pink moss that secretes highly nutritional syrup.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "plant",
+      "x": 960,
+      "y": 921.3749999999999,
+      "size": 15,
+      "color": "#FF33A2",
+      "energy": 71.99999999999989,
+      "age": 135,
+      "maxAge": 1000,
+      "speed": 0,
+      "traits": [
+        {
+          "name": "Stickiness",
+          "value": 70,
+          "description": "Clings to surfaces and traps passing nutrients"
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.08,
+      "locomotion": "sessile",
+      "direction": 4.563110145857645,
+      "animationPhase": 13.565223918346327
+    },
+    {
+      "id": "bbb-004",
+      "name": "Bouncy Balloon-Bug",
+      "species": "Floaters",
+      "description": "A round, yellow insect that bounces off walls to navigate.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "herbivore",
+      "x": 638.1090019380343,
+      "y": 152.47191061431195,
+      "size": 12,
+      "color": "#FFBD33",
+      "energy": 70.94999999999985,
+      "age": 135,
+      "maxAge": 300,
+      "speed": 3.5,
+      "traits": [
+        {
+          "name": "Resilience",
+          "value": 60,
+          "description": "Takes no damage from high-speed collisions"
+        }
+      ],
+      "behavior": "passive",
+      "diet": "herbivore",
+      "reproductionRate": 0.07,
+      "locomotion": "hopping",
+      "direction": 0.4685526762759271,
+      "animationPhase": 17.043703980502986
+    },
+    {
+      "id": "vs-005",
+      "name": "Velvet Snuffler",
+      "species": "Grazer",
+      "description": "A slow-moving, six-legged beast with a soft coat that filters minerals from the air.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "herbivore",
+      "x": 1235.357067303988,
+      "y": 790.7241868744928,
+      "size": 50,
+      "color": "#581845",
+      "energy": 65.94999999999985,
+      "age": 135,
+      "maxAge": 900,
+      "speed": 1.1,
+      "traits": [
+        {
+          "name": "Heavy Armor",
+          "value": 40,
+          "description": "Protects against small predators"
+        }
+      ],
+      "behavior": "social",
+      "diet": "herbivore",
+      "reproductionRate": 0.02,
+      "locomotion": "hopping",
+      "direction": 2.191320263906721,
+      "animationPhase": 17.901339314205917
+    },
+    {
+      "id": "hjb-006",
+      "name": "Hopping Jelly-Ball",
+      "species": "Hoppers",
+      "description": "A translucent blue orb that moves by contracting its entire body.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "herbivore",
+      "x": 422.33517874217966,
+      "y": 629.9235035432025,
+      "size": 22,
+      "color": "#33A2FF",
+      "energy": 55.94999999999985,
+      "age": 135,
+      "maxAge": 450,
+      "speed": 2.8,
+      "traits": [
+        {
+          "name": "Elasticity",
+          "value": 85,
+          "description": "Increases jump distance and speed"
+        }
+      ],
+      "behavior": "migratory",
+      "diet": "herbivore",
+      "reproductionRate": 0.05,
+      "locomotion": "walking",
+      "direction": 1.2236169868242346,
+      "animationPhase": 17.857267016867542
+    },
+    {
+      "id": "sp-007",
+      "name": "Shadow-Pouncer",
+      "species": "Stalkers",
+      "description": "A sleek, dark predator that blends into the dim cavern walls.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "carnivore",
+      "x": 1087.7564318583616,
+      "y": 480.22196147147287,
+      "size": 40,
+      "color": "#1C1C1C",
+      "energy": 75.94999999999985,
+      "age": 135,
+      "maxAge": 700,
+      "speed": 4.8,
+      "traits": [
+        {
+          "name": "Stealth",
+          "value": 90,
+          "description": "Difficult for prey to detect until it is too late"
+        }
+      ],
+      "behavior": "aggressive",
+      "diet": "carnivore",
+      "reproductionRate": 0.01,
+      "locomotion": "walking",
+      "direction": 1.9254769620562393,
+      "animationPhase": 14.66931514665106
+    },
+    {
+      "id": "nbs-008",
+      "name": "Needle-Beaked Slider",
+      "species": "Skimmers",
+      "description": "A fast, orange creature that slides on a layer of mucus to hunt small insects.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "carnivore",
+      "x": 819.7759653261702,
+      "y": 583.7625157209104,
+      "size": 18,
+      "color": "#FF5733",
+      "energy": 65.94999999999985,
+      "age": 135,
+      "maxAge": 500,
+      "speed": 4.2,
+      "traits": [
+        {
+          "name": "Slime Trail",
+          "value": 50,
+          "description": "Reduces friction to maintain high speeds"
+        }
+      ],
+      "behavior": "solitary",
+      "diet": "carnivore",
+      "reproductionRate": 0.04,
+      "locomotion": "walking",
+      "direction": -1.6065794756232232,
+      "animationPhase": 18.468093258331656
+    },
+    {
+      "id": "gg-009",
+      "name": "Giggle-Grubber",
+      "species": "Scavengers",
+      "description": "A pale green creature that makes high-pitched sounds while searching for scraps.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "omnivore",
+      "x": 1087.8577933130523,
+      "y": 475.8572078487578,
+      "size": 28,
+      "color": "#DAF7A6",
+      "energy": 80.94999999999985,
+      "age": 135,
+      "maxAge": 600,
+      "speed": 2.4,
+      "traits": [
+        {
+          "name": "Enhanced Smell",
+          "value": 95,
+          "description": "Locates food sources from great distances"
+        }
+      ],
+      "behavior": "territorial",
+      "diet": "omnivore",
+      "reproductionRate": 0.05,
+      "locomotion": "walking",
+      "direction": -2.5351430634461196,
+      "animationPhase": 15.956129834777947
+    },
+    {
+      "id": "dm-010",
+      "name": "Dust-Muncher",
+      "species": "Cleaners",
+      "description": "A small, grey, many-legged organism that breaks down biological waste.",
+      "ancestry": [],
+      "generation": 1,
+      "type": "decomposer",
+      "x": 477.45641834507643,
+      "y": 879.1256608304299,
+      "size": 10,
+      "color": "#757575",
+      "energy": 45.94999999999985,
+      "age": 135,
+      "maxAge": 400,
+      "speed": 1.2,
+      "traits": [
+        {
+          "name": "Detoxification",
+          "value": 100,
+          "description": "Safely processes harmful waste into nutrients"
+        }
+      ],
+      "behavior": "passive",
+      "diet": "decomposer",
+      "reproductionRate": 0.1,
+      "locomotion": "crawling",
+      "direction": -2.583205529603322,
+      "animationPhase": 18.516091351898464
+    },
+    {
+      "id": "org-1000",
+      "name": "Velvet Snuffler",
+      "species": "Grazer",
+      "description": "A slow-moving, six-legged beast with a soft coat that filters minerals from the air.",
+      "ancestry": [],
+      "generation": 2,
+      "type": "herbivore",
+      "x": 1168.7729375880538,
+      "y": 716.6803094767469,
+      "size": 54.23888992795357,
+      "color": "#581845",
+      "energy": 46.999999999999886,
+      "age": 100,
+      "maxAge": 900,
+      "speed": 1.0661316163504353,
+      "traits": [
+        {
+          "name": "Heavy Armor",
+          "value": 40,
+          "description": "Protects against small predators"
+        }
+      ],
+      "behavior": "social",
+      "diet": "herbivore",
+      "reproductionRate": 0.02,
+      "locomotion": "hopping",
+      "direction": 2.595798030657773,
+      "animationPhase": 15.083679411240219
+    },
+    {
+      "id": "org-1001",
+      "name": "Sugar-Drop Moss",
+      "species": "Carpets",
+      "description": "A sticky, bright pink moss that secretes highly nutritional syrup.",
+      "ancestry": [],
+      "generation": 2,
+      "type": "plant",
+      "x": 980.1329178167921,
+      "y": 926.7580785981323,
+      "size": 15.60701514406077,
+      "color": "#FF33A2",
+      "energy": 52.04999999999988,
+      "age": 41,
+      "maxAge": 1000,
+      "speed": 0,
+      "traits": [
+        {
+          "name": "Stickiness",
+          "value": 70,
+          "description": "Clings to surfaces and traps passing nutrients"
+        }
+      ],
+      "behavior": "passive",
+      "diet": "photosynthesis",
+      "reproductionRate": 0.08,
+      "locomotion": "sessile",
+      "direction": 4.095098768175414,
+      "animationPhase": 5.505891942877192
+    }
+  ],
+  "events": [],
+  "stats": {
+    "totalOrganisms": 12,
+    "births": 0,
+    "deaths": -2,
+    "extinctions": [],
+    "newSpecies": [],
+    "dominantSpecies": "Carpets",
+    "biodiversityIndex": 0.8333333333333334
+  },
+  "narrative": "Neon Gloom-Shroom Hollow is a low-gravity cavernous landscape illuminated by pulsating bio-luminescent flora. Here, the ecosystem thrives on a balance of airborne drifters and ground-dwelling grazers who navigate the thick, nutrient-rich fog."
+}
