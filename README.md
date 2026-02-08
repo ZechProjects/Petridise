@@ -1,5 +1,7 @@
 # 🧫 Petridise — Simulation Observation System
 
+![Petridise Banner](readme/banner.jpg)
+
 > _Create a world, seed it with life, and watch evolution unfold — powered by AI, driven by nature's algorithms._
 
 **Petridise** is an AI-driven life simulation where Google Gemini generates entire ecosystems from scratch, renders them as living 2D terrariums, and then evolves them generation by generation. Configure your world's biome, atmosphere, and compounds, then sit back and observe as creatures move, interact, and evolve in real time.
@@ -186,7 +188,9 @@ All API calls use structured JSON output (`responseMimeType: "application/json"`
 
 ## 📜 License
 
-This project was built for the [Gemini 3 Hackathon](https://gemini3.devpost.com/).
+This project is licensed under the [MIT License](LICENSE).
+
+Built for the [Gemini 3 Hackathon](https://gemini3.devpost.com/).
 
 ---
 
